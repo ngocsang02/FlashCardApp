@@ -35,10 +35,19 @@ function VocabularyManager() {
     fetchVocabularies();
   }, []);
 
+  // Hàm lấy vocabularies, ưu tiên lấy từ localStorage nếu có
   const fetchVocabularies = async () => {
+    setLoading(true);
     try {
+      const cached = localStorage.getItem('vocabularies');
+      if (cached) {
+        setVocabularies(JSON.parse(cached));
+        setLoading(false);
+        return;
+      }
       const response = await axios.get('/api/vocabulary');
       setVocabularies(response.data);
+      localStorage.setItem('vocabularies', JSON.stringify(response.data));
     } catch (error) {
       console.error('Error fetching vocabularies:', error);
     } finally {
@@ -72,8 +81,10 @@ function VocabularyManager() {
       setImageFile(null);
       setImagePreview('');
       setShowForm(false);
-      fetchVocabularies();
-      
+      // Gọi lại API và update cache
+      const response = await axios.get('/api/vocabulary');
+      setVocabularies(response.data);
+      localStorage.setItem('vocabularies', JSON.stringify(response.data));
       window.showToast('Thêm từ vựng thành công!', 'success');
     } catch (error) {
       console.error('Error adding vocabulary:', error);
@@ -118,6 +129,7 @@ function VocabularyManager() {
     }
   };
 
+  // Sau khi xóa từ vựng thành công, update lại cache
   const handleDelete = async (id) => {
     window.showAlert({
       title: 'Xác nhận xóa',
@@ -128,7 +140,10 @@ function VocabularyManager() {
       onConfirm: async () => {
         try {
           await axios.delete(`/api/vocabulary/${id}`);
-          fetchVocabularies();
+          // Gọi lại API và update cache
+          const response = await axios.get('/api/vocabulary');
+          setVocabularies(response.data);
+          localStorage.setItem('vocabularies', JSON.stringify(response.data));
           window.showToast('Đã xóa từ vựng thành công', 'success');
         } catch (error) {
           console.error('Error deleting vocabulary:', error);
@@ -138,6 +153,20 @@ function VocabularyManager() {
     });
   };
 
+  // Thêm nút làm mới để user chủ động refresh data từ DB
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/vocabulary');
+      setVocabularies(response.data);
+      localStorage.setItem('vocabularies', JSON.stringify(response.data));
+      window.showToast('Đã làm mới dữ liệu từ server!', 'success');
+    } catch (error) {
+      window.showToast('Lỗi khi làm mới dữ liệu', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const getLanguageName = (code) => {

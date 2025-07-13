@@ -18,6 +18,7 @@ function Quiz() {
   const [correctVocabulary, setCorrectVocabulary] = useState(null);
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [vocabCount, setVocabCount] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,6 +70,21 @@ function Quiz() {
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
   }, [isBlocking, navigate, location.pathname]);
+
+  useEffect(() => {
+    // Lấy số lượng từ vựng từ localStorage
+    const cached = localStorage.getItem('vocabularies');
+    if (cached) {
+      try {
+        const arr = JSON.parse(cached);
+        setVocabCount(Array.isArray(arr) ? arr.length : 0);
+      } catch {
+        setVocabCount(0);
+      }
+    } else {
+      setVocabCount(0);
+    }
+  }, []);
 
   const startQuiz = async () => {
     setLoading(true);
@@ -320,12 +336,15 @@ function Quiz() {
             <div className="text-center">
               <button
                 onClick={startQuiz}
-                disabled={loading}
-                className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                disabled={loading || vocabCount < 4}
+                className={`w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${loading || vocabCount < 4 ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Play className="h-5 w-5 mr-3 inline" />
                 {loading ? '⏳ Đang tạo bài kiểm tra...' : '🚀 Bắt đầu bài kiểm tra'}
               </button>
+              {vocabCount < 4 && (
+                <div className="text-red-500 text-sm mt-2">Cần ít nhất 4 từ vựng để tạo bài kiểm tra.</div>
+              )}
             </div>
           </div>
         </div>
