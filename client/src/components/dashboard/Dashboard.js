@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, BookOpen, Globe, FolderOpen, Trash2, MoreVertical, Edit, ArrowLeft, Grid } from 'lucide-react';
 

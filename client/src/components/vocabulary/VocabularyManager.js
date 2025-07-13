@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Upload, Trash2, Eye, EyeOff, List, ChevronRight, ChevronDown, Globe, FolderOpen, FileText, ArrowLeft, BookOpen } from 'lucide-react';
 
