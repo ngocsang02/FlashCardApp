@@ -1,0 +1,56 @@
+word,meaning,imageUrl
+apple,quả táo,https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop
+banana,quả chuối,https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop
+orange,quả cam,https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop
+grape,quả nho,https://images.unsplash.com/photo-1515589666096-d5d0e8b9e6c0?w=400&h=400&fit=crop
+strawberry,dâu tây,https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=400&fit=crop
+dog,con chó,https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=400&fit=crop
+cat,con mèo,https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=400&fit=crop
+bird,con chim,https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=400&fit=crop
+fish,con cá,https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=400&fit=crop
+rabbit,con thỏ,https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=400&fit=crop
+car,ô tô,https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=400&fit=crop
+bus,xe buýt,https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=400&fit=crop
+bicycle,xe đạp,https://images.unsplash.com/photo-1507035895480-6b5596a23672?w=400&h=400&fit=crop
+train,tàu hỏa,https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=400&fit=crop
+airplane,máy bay,https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400&h=400&fit=crop
+house,ngôi nhà,https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&h=400&fit=crop
+building,tòa nhà,https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=400&fit=crop
+bridge,cây cầu,https://images.unsplash.com/photo-1545558014-8692077e9b5a?w=400&h=400&fit=crop
+tree,cây,https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=400&fit=crop
+flower,hoa,https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop
+book,sách,https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop
+pen,bút mực,https://images.unsplash.com/photo-1583485088034-697b5bc36b35?w=400&h=400&fit=crop
+pencil,bút chì,https://images.unsplash.com/photo-1583485088034-697b5bc36b35?w=400&h=400&fit=crop
+computer,máy tính,https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop
+phone,điện thoại,https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop
+table,bàn,https://images.unsplash.com/photo-1532372320572-cda25653a58f?w=400&h=400&fit=crop
+chair,ghế,https://images.unsplash.com/photo-1503602642458-232111445657?w=400&h=400&fit=crop
+bed,giường,https://images.unsplash.com/photo-1505693314120-0d443867882c?w=400&h=400&fit=crop
+window,cửa sổ,https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop
+door,cửa,https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop
+sun,mặt trời,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+moon,mặt trăng,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+star,ngôi sao,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+cloud,mây,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+rain,mưa,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+water,nước,https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=400&fit=crop
+fire,lửa,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+earth,trái đất,https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop
+bread,bánh mì,https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=400&fit=crop
+rice,cơm,https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=400&fit=crop
+meat,thịt,https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=400&fit=crop
+egg,trứng,https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&h=400&fit=crop
+milk,sữa,https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=400&fit=crop
+cheese,phô mai,https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&h=400&fit=crop
+butter,bơ,https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&h=400&fit=crop
+sugar,đường,https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=400&h=400&fit=crop
+salt,muối,https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=400&h=400&fit=crop
+coffee,cà phê,https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop
+tea,trà,https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=400&fit=crop
+juice,nước ép,https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=400&h=400&fit=crop
+soup,súp,https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=400&fit=crop
+salad,salad,https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop
+pizza,pizza,https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=400&fit=crop
+hamburger,hamburger,https://images.unsplash.com/photo-1568901346375-23c9450c58e2?w=400&h=400&fit=crop
+hotdog,hotdog,https://images.unsplash.com/photo-1612392062126-2c4b2b0b0b0b?w=400&h=400&fit=crop 
