@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../axiosConfig';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Upload, Trash2, Eye, EyeOff, List, ChevronRight, ChevronDown, Globe, FolderOpen, FileText, ArrowLeft, BookOpen } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Plus, Upload, Trash2, Eye, EyeOff, List, ChevronRight, ChevronDown, Globe, FolderOpen, FileText, ArrowLeft, BookOpen, MoreVertical, Edit } from 'lucide-react';
+import DropdownMenu from '../util/DropdownMenu';
 
 function VocabularyManager() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [vocabularies, setVocabularies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -30,6 +32,17 @@ function VocabularyManager() {
   const [imageInputType, setImageInputType] = useState('url'); // 'url' or 'file'
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  // Khôi phục state khi quay lại
+  useEffect(() => {
+    if (location.state && location.state._restoreUI) {
+      if (location.state.showList !== undefined) setShowList(location.state.showList);
+      if (location.state.expandedLanguages) setExpandedLanguages(location.state.expandedLanguages);
+      if (location.state.expandedTopics) setExpandedTopics(location.state.expandedTopics);
+      // ... có thể bổ sung các state khác nếu cần ...
+    }
+  }, []);
 
   useEffect(() => {
     fetchVocabularies();
@@ -168,6 +181,18 @@ function VocabularyManager() {
     }
   };
 
+  const handleEdit = (vocab) => {
+    navigate(`/edit-vocabulary/${vocab._id}`, {
+      state: {
+        from: 'vocabulary',
+        showList,
+        expandedLanguages,
+        expandedTopics,
+        _restoreUI: true,
+        scrollY: window.scrollY
+      }
+    });
+  };
 
   const getLanguageName = (code) => {
     const languages = {
@@ -291,6 +316,24 @@ function VocabularyManager() {
       throw new Error('Có lỗi xảy ra khi upload hình ảnh');
     }
   };
+
+  useEffect(() => {
+    if (
+      location.state &&
+      location.state.scrollY !== undefined &&
+      !loading
+    ) {
+      let count = 0;
+      const scrollToPosition = () => {
+        window.scrollTo(0, location.state.scrollY);
+        count++;
+        if (count < 10) {
+          requestAnimationFrame(scrollToPosition);
+        }
+      };
+      scrollToPosition();
+    }
+  }, [loading]);
 
   if (loading) {
     return (
@@ -788,13 +831,24 @@ function VocabularyManager() {
                                           </span>
                                         </div>
                                       </div>
-                                      <button
-                                        onClick={() => handleDelete(vocab._id)}
-                                        className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                        title="Xóa từ vựng"
-                                      >
-                                        <Trash2 className="h-5 w-5" />
-                                      </button>
+                                      <div className="relative">
+                                        <DropdownMenu
+                                          trigger={<MoreVertical className="h-5 w-5" />}
+                                          options={[
+                                            {
+                                              label: 'Chỉnh sửa',
+                                              icon: <Edit className="h-4 w-4 mr-2" />,
+                                              onClick: () => handleEdit(vocab),
+                                            },
+                                            {
+                                              label: 'Xóa',
+                                              icon: <Trash2 className="h-4 w-4 mr-2" />,
+                                              onClick: () => handleDelete(vocab._id),
+                                              danger: true
+                                            }
+                                          ]}
+                                        />
+                                      </div>
                                     </div>
                                   </div>
                                 ))}

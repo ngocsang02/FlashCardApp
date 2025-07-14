@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ChevronRight, ChevronDown, BookOpen, FolderOpen, Globe, FileText, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, BookOpen, FolderOpen, Globe, FileText, Trash2, MoreVertical, Edit } from 'lucide-react';
+import DropdownMenu from '../util/DropdownMenu';
 
 function VocabularyList() {
   const [vocabularies, setVocabularies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedLanguages, setExpandedLanguages] = useState({});
   const [expandedTopics, setExpandedTopics] = useState({});
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   useEffect(() => {
     fetchVocabularies();
@@ -100,6 +102,11 @@ function VocabularyList() {
         alert('Có lỗi xảy ra khi xóa ngôn ngữ');
       }
     }
+  };
+
+  const handleEdit = (vocab) => {
+    // TODO: Hiện modal chỉnh sửa
+    alert('Chỉnh sửa: ' + vocab.word);
   };
 
   if (loading) {
@@ -274,15 +281,24 @@ function VocabularyList() {
                                       </span>
                                     </div>
                                   </div>
-                                  <button
-                                    onClick={() => handleDelete(vocab._id)}
-                                    className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                    title="Xóa từ vựng"
-                                  >
-                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
+                                  <div className="relative">
+                                    <DropdownMenu
+                                      trigger={<MoreVertical className="h-5 w-5" />}
+                                      options={[
+                                        {
+                                          label: 'Chỉnh sửa',
+                                          icon: <Edit className="h-4 w-4 mr-2" />,
+                                          onClick: () => handleEdit(vocab),
+                                        },
+                                        {
+                                          label: 'Xóa',
+                                          icon: <Trash2 className="h-4 w-4 mr-2" />,
+                                          onClick: () => handleDelete(vocab._id),
+                                          danger: true
+                                        }
+                                      ]}
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             ))}

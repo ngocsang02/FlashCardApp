@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../axiosConfig';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { BarChart3, BookOpen, Globe, FolderOpen, Trash2, MoreVertical, Edit, ArrowLeft, Grid } from 'lucide-react';
+import DropdownMenu from '../util/DropdownMenu';
 
 function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('');
@@ -19,6 +21,14 @@ function Dashboard() {
   useEffect(() => {
     fetchVocabularies();
   }, [selectedLanguage, selectedTopic]);
+
+  // Khôi phục filter khi quay lại
+  useEffect(() => {
+    if (location.state && location.state._restoreFilter) {
+      if (location.state.selectedLanguage !== undefined) setSelectedLanguage(location.state.selectedLanguage);
+      if (location.state.selectedTopic !== undefined) setSelectedTopic(location.state.selectedTopic);
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -132,6 +142,47 @@ function Dashboard() {
   const toggleDropdown = (id) => {
     setOpenDropdown(openDropdown === id ? null : id);
   };
+
+  const handleEditVocabulary = (id) => {
+    navigate(`/edit-vocabulary/${id}`, {
+      state: {
+        from: 'dashboard',
+        selectedLanguage,
+        selectedTopic,
+        _restoreFilter: true,
+        scrollY: window.scrollY
+      }
+    });
+  };
+  const handleDeleteVocabulary = async (id) => {
+    // Có thể dùng logic xóa cũ hoặc show confirm
+    if (!window.confirm('Bạn có chắc muốn xóa từ vựng này?')) return;
+    try {
+      await axios.delete(`/api/vocabulary/${id}`);
+      window.showToast('Đã xóa từ vựng!', 'success');
+      fetchVocabularies();
+    } catch (err) {
+      window.showToast('Lỗi khi xóa', 'error');
+    }
+  };
+
+  useEffect(() => {
+    if (
+      location.state &&
+      location.state.scrollY !== undefined &&
+      !loading
+    ) {
+      let count = 0;
+      const scrollToPosition = () => {
+        window.scrollTo(0, location.state.scrollY);
+        count++;
+        if (count < 10) {
+          requestAnimationFrame(scrollToPosition);
+        }
+      };
+      scrollToPosition();
+    }
+  }, [loading]);
 
   if (loading) {
     return (
@@ -277,45 +328,22 @@ function Dashboard() {
                     <span className="text-lg font-bold text-primary-600">
                       {stat.totalWords} từ
                     </span>
-                    <div className="relative dropdown-container">
-                       <button
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           toggleDropdown(`language-${stat._id}`);
-                         }}
-                         className="p-1 text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
-                         title="Tùy chọn"
-                       >
-                         <MoreVertical className="h-4 w-4" />
-                       </button>
-                      {openDropdown === `language-${stat._id}` && (
-                        <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                          <div className="py-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditLanguage(stat._id);
-                              }}
-                              className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteLanguage(stat._id);
-                                setOpenDropdown(null);
-                              }}
-                              className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Xóa
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <DropdownMenu
+                      trigger={<MoreVertical className="h-4 w-4" />}
+                      options={[
+                        {
+                          label: 'Chỉnh sửa',
+                          icon: <Edit className="h-4 w-4 mr-2" />,
+                          onClick: () => handleEditLanguage(stat._id)
+                        },
+                        {
+                          label: 'Xóa',
+                          icon: <Trash2 className="h-4 w-4 mr-2" />,
+                          onClick: () => handleDeleteLanguage(stat._id),
+                          danger: true
+                        }
+                      ]}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -327,45 +355,22 @@ function Dashboard() {
                         </span>
                       </div>
                       <span className="text-gray-900 font-medium flex-shrink-0 mr-2">{topic.count} từ</span>
-                      <div className="relative dropdown-container">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDropdown(`topic-${stat._id}-${index}`);
-                          }}
-                          className="p-1 text-gray-500 hover:bg-gray-50 rounded transition-colors flex-shrink-0"
-                          title="Tùy chọn"
-                        >
-                          <MoreVertical className="h-3 w-3" />
-                        </button>
-                        {openDropdown === `topic-${stat._id}-${index}` && (
-                          <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                            <div className="py-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditTopic(stat._id, topic.topic);
-                                }}
-                                className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <Edit className="h-3 w-3 mr-2" />
-                                Chỉnh sửa
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteTopic(stat._id, topic.topic);
-                                  setOpenDropdown(null);
-                                }}
-                                className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-3 w-3 mr-2" />
-                                Xóa
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <DropdownMenu
+                        trigger={<MoreVertical className="h-3 w-3" />}
+                        options={[
+                          {
+                            label: 'Chỉnh sửa',
+                            icon: <Edit className="h-3 w-3 mr-2" />,
+                            onClick: () => handleEditTopic(stat._id, topic.topic)
+                          },
+                          {
+                            label: 'Xóa',
+                            icon: <Trash2 className="h-3 w-3 mr-2" />,
+                            onClick: () => handleDeleteTopic(stat._id, topic.topic),
+                            danger: true
+                          }
+                        ]}
+                      />
                     </div>
                   ))}
                 </div>
@@ -399,45 +404,22 @@ function Dashboard() {
                     </span>
                   </div>
                   <span className="text-primary-600 font-bold flex-shrink-0 mr-2">{topic.count} từ</span>
-                  <div className="relative dropdown-container">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDropdown(`title-${index}`);
-                      }}
-                      className="p-1 text-gray-500 hover:bg-gray-50 rounded transition-colors flex-shrink-0"
-                      title="Tùy chọn"
-                    >
-                      <MoreVertical className="h-3 w-3" />
-                    </button>
-                    {openDropdown === `title-${index}` && (
-                      <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                        <div className="py-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditTopic(selectedLanguage || 'all', topic.topic);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Edit className="h-3 w-3 mr-2" />
-                            Chỉnh sửa
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteTopic(selectedLanguage || 'all', topic.topic);
-                              setOpenDropdown(null);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-3 w-3 mr-2" />
-                            Xóa
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <DropdownMenu
+                    trigger={<MoreVertical className="h-3 w-3" />}
+                    options={[
+                      {
+                        label: 'Chỉnh sửa',
+                        icon: <Edit className="h-3 w-3 mr-2" />,
+                        onClick: () => handleEditTopic(selectedLanguage || 'all', topic.topic)
+                      },
+                      {
+                        label: 'Xóa',
+                        icon: <Trash2 className="h-3 w-3 mr-2" />,
+                        onClick: () => handleDeleteTopic(selectedLanguage || 'all', topic.topic),
+                        danger: true
+                      }
+                    ]}
+                  />
                 </div>
               ))}
           </div>
@@ -455,9 +437,9 @@ function Dashboard() {
           <div className="divide-y divide-gray-200">
             {vocabularies.map((vocab) => (
               <div key={vocab._id} className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
                       <h3 className="text-lg font-semibold text-gray-900">{vocab.word}</h3>
                       <span className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full">
                         {vocab.language}
@@ -466,31 +448,47 @@ function Dashboard() {
                         {vocab.topic}
                       </span>
                     </div>
-                    <p className="text-gray-600 mb-3">{vocab.meaning}</p>
-                                         <div className="flex items-center space-x-4">
-                       <div className="w-16 h-16 rounded-lg border overflow-hidden">
-                         {vocab.imageUrl ? (
-                           <img
-                             src={vocab.imageUrl}
-                             alt={vocab.word}
-                             className="w-full h-full object-cover"
-                             onError={(e) => {
-                               e.target.style.display = 'none';
-                               e.target.nextSibling.style.display = 'flex';
-                             }}
-                           />
-                         ) : null}
-                         <div 
-                           className={`w-full h-full flex items-center justify-center text-xs text-gray-500 bg-gray-100 ${vocab.imageUrl ? 'hidden' : 'flex'}`}
-                           style={{ display: vocab.imageUrl ? 'none' : 'flex' }}
-                         >
-                           Not found
-                         </div>
-                       </div>
-                       <span className="text-sm text-gray-500">
-                         Thêm lúc: {new Date(vocab.createdAt).toLocaleDateString('vi-VN')}
-                       </span>
-                     </div>
+                    <DropdownMenu
+                      trigger={<MoreVertical className="h-5 w-5" />}
+                      options={[
+                        {
+                          label: 'Chỉnh sửa',
+                          icon: <Edit className="h-4 w-4 mr-2" />,
+                          onClick: () => handleEditVocabulary(vocab._id)
+                        },
+                        {
+                          label: 'Xóa',
+                          icon: <Trash2 className="h-4 w-4 mr-2" />,
+                          onClick: () => handleDeleteVocabulary(vocab._id),
+                          danger: true
+                        }
+                      ]}
+                    />
+                  </div>
+                  <p className="text-gray-600 mb-3">{vocab.meaning}</p>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 rounded-lg border overflow-hidden">
+                      {vocab.imageUrl ? (
+                        <img
+                          src={vocab.imageUrl}
+                          alt={vocab.word}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`w-full h-full flex items-center justify-center text-xs text-gray-500 bg-gray-100 ${vocab.imageUrl ? 'hidden' : 'flex'}`}
+                        style={{ display: vocab.imageUrl ? 'none' : 'flex' }}
+                      >
+                        Not found
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      Thêm lúc: {new Date(vocab.createdAt).toLocaleDateString('vi-VN')}
+                    </span>
                   </div>
                 </div>
               </div>

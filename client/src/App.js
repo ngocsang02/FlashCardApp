@@ -13,6 +13,7 @@ import StatisticsPage from './components/statistics/StatisticsPage';
 import ToastContainer from './components/util/ToastContainer';
 import AlertManager from './components/util/AlertManager';
 import SimpleAlertManager from './components/util/SimpleAlertManager';
+import EditVocabulary from './components/edit/EditVocabulary';
 
 function NavIcon({ active, children, idGradient }) {
   return (
@@ -141,6 +142,7 @@ function App() {
           <Route path="/statistics" element={<StatisticsPage />} />
           <Route path="/edit-language/:language" element={<EditLanguage />} />
           <Route path="/edit-topic/:language/:topic" element={<EditTopic />} />
+          <Route path="/edit-vocabulary/:id" element={<EditVocabulary />} />
         </Routes>
       </main>
       <ToastContainer />

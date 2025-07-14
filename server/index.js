@@ -483,6 +483,19 @@ app.get('/api/vocabulary/languages-with-topic', async (req, res) => {
   }
 });
 
+// Get a single vocabulary by id
+app.get('/api/vocabulary/:id', async (req, res) => {
+  try {
+    const vocab = await Vocabulary.findById(req.params.id);
+    if (!vocab) {
+      return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
+    }
+    res.json(vocab);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
