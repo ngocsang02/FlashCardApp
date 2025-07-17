@@ -65,21 +65,16 @@ Tính năng này cho phép người dùng thêm, sửa, xóa, xem và import t�
 - **API:** `/api/vocabulary/topic/:topic`, `/api/vocabulary/language/:language`
   - Cho phép đổi tên, xóa chủ đề/ngôn ngữ và cập nhật lại danh sách từ vựng liên quan.
 
+## Tính năng nâng cao về quản lý hình ảnh (2024)
+
+- Hỗ trợ dán trực tiếp hình ảnh từ clipboard vào ô URL hình ảnh. Nếu paste là file ảnh, hệ thống sẽ tự động upload lên server và điền URL trả về vào input.
+- Nếu paste là link ảnh, hệ thống sẽ tự động load ảnh preview.
+- Khi click vào ảnh preview nhỏ sẽ mở modal xem trước ảnh lớn ở giữa màn hình, tự động căn giữa, tối ưu cho cả desktop và mobile.
+- Nếu người dùng xóa đường dẫn ảnh hoặc đóng form thêm từ mới, hệ thống sẽ tự động xóa file ảnh upload khỏi server để tránh file rác.
+- Nếu thêm từ mới thất bại, ảnh upload cũng sẽ được xóa tự động.
+- Chỉ cho phép mỗi từ vựng có 1 ảnh duy nhất.
+- Ảnh upload sẽ được lưu vào thư mục `uploads/` trên server, và có thể truy cập qua URL `/uploads/tenfile.png`.
+
 ## Các file liên quan
 
-- `client/src/components/vocabulary/VocabularyManager.js`
-- `client/src/components/vocabulary/VocabularyList.js`
-- `client/src/components/edit/EditVocabulary.js`
-- `client/src/components/edit/EditTopic.js`
-- `client/src/components/edit/EditLanguage.js`
-- API: `/api/vocabulary`, `/api/vocabulary/bulk`, `/api/vocabulary/:id`
-
-## Hướng dẫn sử dụng
-
-1. Vào trang "Quản lý từ vựng" từ trang chủ.
-2. Để thêm từ mới, nhấn nút "Thêm từ vựng", điền thông tin và lưu lại.
-3. Để import từ file CSV, chọn file, nhập chủ đề/ngôn ngữ và nhấn "Import".
-4. Để sửa/xóa từ, nhấn vào biểu tượng chỉnh sửa/xóa bên cạnh từ vựng.
-5. Có thể lọc từ vựng theo ngôn ngữ/chủ đề bằng các bộ lọc phía trên danh sách.
-
-> Lưu ý: File CSV mẫu có thể tham khảo tại thư mục gốc dự án (ví dụ: `example-vocabulary.csv`).
+- `
