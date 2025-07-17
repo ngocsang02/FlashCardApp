@@ -19,6 +19,15 @@ function Quiz() {
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [vocabCount, setVocabCount] = useState(0);
+  const [languages, setLanguages] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [topics, setTopics] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState('all');
+  // Thêm state cho số từ vựng phù hợp và chế độ nhập số câu custom
+  const [filteredVocabCount, setFilteredVocabCount] = useState(0);
+  const [questionMode, setQuestionMode] = useState('preset'); // 'preset' | 'custom' | 'all'
+  const [customQuestionCount, setCustomQuestionCount] = useState('');
+  const [questionError, setQuestionError] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -86,10 +95,46 @@ function Quiz() {
     }
   }, []);
 
+  // Lấy danh sách ngôn ngữ khi mount (luôn lấy từ API, không lấy localStorage)
+  useEffect(() => {
+    axios.get('/api/languages').then(res => setLanguages(res.data)).catch(() => setLanguages([]));
+  }, []);
+
+  // Hàm filter vocabularies theo ngôn ngữ/chủ đề
+  useEffect(() => {
+    if (!selectedLanguage) {
+      setFilteredVocabCount(0);
+      return;
+    }
+    const cached = localStorage.getItem('vocabularies');
+    if (cached) {
+      try {
+        const arr = JSON.parse(cached);
+        const filtered = arr.filter(v => v.language === selectedLanguage && (selectedTopic === 'all' || v.topic === selectedTopic));
+        setFilteredVocabCount(filtered.length);
+      } catch {
+        setFilteredVocabCount(0);
+      }
+    } else {
+      setFilteredVocabCount(0);
+    }
+  }, [selectedLanguage, selectedTopic]);
+
+  // Khi chọn ngôn ngữ, lấy danh sách chủ đề
+  useEffect(() => {
+    if (selectedLanguage) {
+      axios.get(`/api/topics/${selectedLanguage}`).then(res => setTopics(res.data)).catch(() => setTopics([]));
+      setSelectedTopic('all');
+    } else {
+      setTopics([]);
+      setSelectedTopic('all');
+    }
+  }, [selectedLanguage]);
+
   const startQuiz = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/quiz?type=${quizType}&count=${questionCount}`);
+      const response = await axios.get(`/api/quiz?type=${quizType}&count=${questionCount}&language=${selectedLanguage}&topic=${selectedTopic}`);
       setQuestions(response.data);
       setCurrentQuestion(0);
       setScore(0);
@@ -291,59 +336,157 @@ function Quiz() {
           
           <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    📝 Loại bài kiểm tra
-                  </label>
-                  <select
-                    value={quizType}
-                    onChange={(e) => setQuizType(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
-                  >
-                    <option value="word-to-image">🔤 Nhìn từ → Chọn hình</option>
-                    <option value="image-to-word">🖼️ Nhìn hình → Chọn từ</option>
-                    <option value="mixed">🎲 Hỗn hợp</option>
-                  </select>
-                </div>
+              {/* Hàng 1 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">🌐 Ngôn ngữ kiểm tra</label>
+                {/* select ngôn ngữ */}
+                <select
+                  value={selectedLanguage}
+                  onChange={e => setSelectedLanguage(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
+                  disabled={languages.length === 0}
+                >
+                  {languages.length === 0 ? (
+                    <option value="" disabled>Không có ngôn ngữ</option>
+                  ) : (
+                    <option value="" disabled>Chọn ngôn ngữ</option>
+                  )}
+                  {languages.map(lang => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    📊 Số câu hỏi
-                  </label>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">📂 Chủ đề kiểm tra</label>
+                {/* select chủ đề */}
+                <select
+                  value={topics.length === 0 ? "" : selectedTopic}
+                  onChange={e => setSelectedTopic(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
+                  disabled={!selectedLanguage}
+                >
+                  {topics.length === 0 ? (
+                    <option value="" disabled>Không có chủ đề</option>
+                  ) : (
+                    <>
+                      <option value="all">Tất cả chủ đề</option>
+                      {topics.map(topic => (
+                        <option key={topic} value={topic}>{topic}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+              {/* Hàng 2 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">📊 Số câu hỏi</label>
+                {questionMode === 'custom' ? (
+                  <>
+                    <input
+                      type="number"
+                      value={customQuestionCount}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setCustomQuestionCount(val);
+                        if (val === '') {
+                          setQuestionError('Vui lòng nhập số câu hỏi');
+                          setQuestionCount('');
+                          return;
+                        }
+                        const num = Number(val);
+                        if (isNaN(num) || num < 1) {
+                          setQuestionError('Số câu hỏi phải lớn hơn 0');
+                          setQuestionCount('');
+                        } else if (num > filteredVocabCount) {
+                          setQuestionError(`Tối đa ${filteredVocabCount} câu`);
+                          setQuestionCount('');
+                        } else {
+                          setQuestionError('');
+                          setQuestionCount(num);
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder={`Nhập số câu (1-${filteredVocabCount})`}
+                    />
+                    {questionError && (
+                      <div className="text-red-500 text-sm mt-1">{questionError}</div>
+                    )}
+                  </>
+                ) : (
                   <select
-                    value={questionCount}
-                    onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                    value={questionMode === 'custom' ? 'custom' : (questionMode === 'all' ? 'all' : questionCount)}
+                    onChange={e => {
+                      if (e.target.value === 'custom') {
+                        setQuestionMode('custom');
+                        setCustomQuestionCount('');
+                        setQuestionCount('');
+                        setQuestionError('');
+                      } else if (e.target.value === 'all') {
+                        setQuestionMode('all');
+                        setQuestionCount(filteredVocabCount);
+                        setQuestionError('');
+                      } else {
+                        setQuestionMode('preset');
+                        setQuestionCount(Number(e.target.value));
+                        setQuestionError('');
+                      }
+                    }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
+                    disabled={languages.length === 0 || filteredVocabCount === 0}
                   >
-                    <option value={5}>5 câu</option>
-                    <option value={10}>10 câu</option>
-                    <option value={20}>20 câu</option>
-                    <option value={30}>30 câu</option>
-                    <option value={50}>50 câu</option>
-                    <option value={100}>100 câu</option>
-                    <option value={200}>200 câu</option>
-                    <option value={300}>300 câu</option>
-                    <option value={500}>500 câu</option>
-                    <option value={1000}>1000 câu</option>
+                    {languages.length === 0 || filteredVocabCount === 0 ? (
+                      <option value={0}>0 câu</option>
+                    ) : (
+                      <>
+                        {filteredVocabCount >= 5 && <option value={5}>5 câu</option>}
+                        {filteredVocabCount >= 10 && <option value={10}>10 câu</option>}
+                        {filteredVocabCount >= 20 && <option value={20}>20 câu</option>}
+                        {filteredVocabCount >= 30 && <option value={30}>30 câu</option>}
+                        {filteredVocabCount >= 50 && <option value={50}>50 câu</option>}
+                        {filteredVocabCount >= 100 && <option value={100}>100 câu</option>}
+                        {filteredVocabCount >= 200 && <option value={200}>200 câu</option>}
+                        {filteredVocabCount >= 300 && <option value={300}>300 câu</option>}
+                        {filteredVocabCount >= 500 && <option value={500}>500 câu</option>}
+                        {filteredVocabCount >= 1000 && <option value={1000}>1000 câu</option>}
+                        <option value="all">Toàn bộ ({filteredVocabCount} câu)</option>
+                        <option value="custom">Khác...</option>
+                      </>
+                    )}
                   </select>
-                </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">📝 Loại bài kiểm tra</label>
+                <select
+                  value={quizType}
+                  onChange={(e) => setQuizType(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
+                  disabled={languages.length === 0}
+                >
+                  <option value="word-to-image">🔤 Nhìn từ → Chọn hình</option>
+                  <option value="image-to-word">🖼️ Nhìn hình → Chọn từ</option>
+                  <option value="mixed">🎲 Hỗn hợp</option>
+                </select>
               </div>
             </div>
 
             <div className="text-center">
               <button
                 onClick={startQuiz}
-                disabled={loading || vocabCount < 4}
-                className={`w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${loading || vocabCount < 4 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={loading || vocabCount < 4 || !selectedLanguage || (topics.length > 0 && !selectedTopic) || languages.length === 0}
+                className={`w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${loading || vocabCount < 4 || !selectedLanguage || (topics.length > 0 && !selectedTopic) || languages.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Play className="h-5 w-5 mr-3 inline" />
                 {loading ? '⏳ Đang tạo bài kiểm tra...' : '🚀 Bắt đầu bài kiểm tra'}
               </button>
               {vocabCount < 4 && (
                 <div className="text-red-500 text-sm mt-2">Cần ít nhất 4 từ vựng để tạo bài kiểm tra.</div>
+              )}
+              {!selectedLanguage && (
+                <div className="text-red-500 text-sm mt-2">Vui lòng chọn ngôn ngữ kiểm tra.</div>
+              )}
+              {selectedLanguage && topics.length === 0 && (
+                <div className="text-red-500 text-sm mt-2">Không có chủ đề nào cho ngôn ngữ này.</div>
               )}
             </div>
           </div>

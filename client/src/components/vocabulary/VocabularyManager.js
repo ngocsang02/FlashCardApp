@@ -48,16 +48,10 @@ function VocabularyManager() {
     fetchVocabularies();
   }, []);
 
-  // Hàm lấy vocabularies, ưu tiên lấy từ localStorage nếu có
+  // Hàm lấy vocabularies, luôn lấy mới từ server
   const fetchVocabularies = async () => {
     setLoading(true);
     try {
-      const cached = localStorage.getItem('vocabularies');
-      if (cached) {
-        setVocabularies(JSON.parse(cached));
-        setLoading(false);
-        return;
-      }
       const response = await axios.get('/api/vocabulary');
       setVocabularies(response.data);
       localStorage.setItem('vocabularies', JSON.stringify(response.data));
@@ -335,6 +329,13 @@ function VocabularyManager() {
     }
   }, [loading]);
 
+  // Nếu danh sách chủ đề sẵn có rỗng, tự động chọn 'Chủ đề mới'
+  useEffect(() => {
+    if (showForm && getTopicsByLanguage(formData.language).length === 0 && selectedTopicOption !== 'new') {
+      setSelectedTopicOption('new');
+    }
+  }, [showForm, formData.language]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -478,6 +479,26 @@ function VocabularyManager() {
                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="https://example.com/image.jpg"
+                    onPaste={async (e) => {
+                      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+                        const file = e.clipboardData.files[0];
+                        if (file.type.startsWith('image/')) {
+                          window.showToast && window.showToast('Đang upload ảnh...', 'info');
+                          try {
+                            const formDataUpload = new FormData();
+                            formDataUpload.append('image', file);
+                            const response = await axios.post('/api/upload', formDataUpload, {
+                              headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                            setFormData((prev) => ({ ...prev, imageUrl: response.data.url }));
+                            window.showToast && window.showToast('Upload ảnh thành công!', 'success');
+                          } catch (err) {
+                            window.showToast && window.showToast('Upload ảnh thất bại!', 'error');
+                          }
+                          e.preventDefault();
+                        }
+                      }
+                    }}
                   />
                   {formData.imageUrl && (
                     <div className="mt-2">

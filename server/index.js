@@ -34,6 +34,29 @@ const upload = multer({
   }
 });
 
+// Multer config cho ảnh (khác với file CSV)
+const imageUpload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      const uploadDir = './uploads';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname);
+    }
+  }),
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Chỉ chấp nhận file ảnh'), false);
+    }
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -158,7 +181,6 @@ app.post('/api/vocabulary/bulk', upload.single('file'), async (req, res) => {
     fs.createReadStream(req.file.path)
       .pipe(csv())
       .on('data', (data) => {
-        console.log('CSV row:', data);
         results.push(data);
       })
       .on('end', async () => {
@@ -187,31 +209,34 @@ app.post('/api/vocabulary/bulk', upload.single('file'), async (req, res) => {
             topic: topic // Use topic from form data
           })).filter(v => v.word && v.meaning); // Only require word and meaning
 
-          console.log('Filtered vocabularies:', vocabularies.length);
-
           if (vocabularies.length === 0) {
             fs.unlinkSync(req.file.path);
             return res.status(400).json({ message: 'Không có dữ liệu hợp lệ trong file CSV' });
           }
 
-          // Check for duplicates
+          // Check for duplicates in DB
           const existingWords = await Vocabulary.find({ 
             word: { $in: vocabularies.map(v => v.word) },
             language: language,
             topic: topic
           });
+          const existingWordSet = new Set(existingWords.map(v => v.word));
 
-          if (existingWords.length > 0) {
+          // Only keep new words
+          const newVocabularies = vocabularies.filter(v => !existingWordSet.has(v.word));
+
+          if (newVocabularies.length === 0) {
             fs.unlinkSync(req.file.path);
-            return res.status(400).json({ 
-              message: `Có ${existingWords.length} từ vựng đã tồn tại trong chủ đề "${topic}"` 
-            });
+            return res.status(400).json({ message: 'Tất cả các từ trong file đã tồn tại trong chủ đề này.' });
           }
 
-          const savedVocabularies = await Vocabulary.insertMany(vocabularies);
+          const savedVocabularies = await Vocabulary.insertMany(newVocabularies);
           fs.unlinkSync(req.file.path); // Delete temporary file
-          console.log('Successfully imported:', savedVocabularies.length, 'vocabularies');
-          res.status(201).json(savedVocabularies);
+          res.status(201).json({
+            imported: savedVocabularies.length,
+            skipped: existingWords.length,
+            message: `Đã import ${savedVocabularies.length} từ mới, bỏ qua ${existingWords.length} từ đã tồn tại.`
+          });
         } catch (error) {
           console.error('CSV import error:', error);
           if (fs.existsSync(req.file.path)) {
@@ -233,6 +258,17 @@ app.post('/api/vocabulary/bulk', upload.single('file'), async (req, res) => {
   }
 });
 
+// API upload ảnh
+app.post('/api/upload', imageUpload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  // Trả về đường dẫn tĩnh để frontend dùng
+  const url = `/uploads/${req.file.filename}`;
+  res.json({ url });
+});
+
+// Cho phép truy cập file tĩnh trong thư mục uploads
+app.use('/uploads', express.static('uploads'));
+
 // Error handling middleware for multer
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
@@ -250,8 +286,11 @@ app.use((error, req, res, next) => {
 // Get quiz questions
 app.get('/api/quiz', async (req, res) => {
   try {
-    const { type = 'word-to-image', count = 10 } = req.query;
-    const allVocabularies = await Vocabulary.find();
+    const { type = 'word-to-image', count = 10, language, topic } = req.query;
+    let filter = {};
+    if (language) filter.language = language;
+    if (topic && topic !== 'all') filter.topic = topic;
+    const allVocabularies = await Vocabulary.find(filter);
     
     if (allVocabularies.length < 4) {
       return res.status(400).json({ message: 'Cần ít nhất 4 từ vựng để tạo bài kiểm tra' });
