@@ -266,6 +266,25 @@ app.post('/api/upload', imageUpload.single('image'), (req, res) => {
   res.json({ url });
 });
 
+// API xóa ảnh
+app.delete('/api/upload', (req, res) => {
+  // Nhận tên file qua query hoặc body
+  const fileUrl = req.query.url || req.body?.url;
+  if (!fileUrl) return res.status(400).json({ error: 'Thiếu url file' });
+  // Lấy tên file từ url
+  const filename = fileUrl.split('/').pop();
+  const filePath = `./uploads/${filename}`;
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'File không tồn tại' });
+  }
+  try {
+    fs.unlinkSync(filePath);
+    res.json({ message: 'Đã xóa file thành công' });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi khi xóa file' });
+  }
+});
+
 // Cho phép truy cập file tĩnh trong thư mục uploads
 app.use('/uploads', express.static('uploads'));
 
