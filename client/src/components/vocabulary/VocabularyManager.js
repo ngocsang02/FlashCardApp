@@ -33,6 +33,11 @@ function VocabularyManager() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
+  // Thêm state cho modal preview ảnh
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState('');
+  // Thêm biến lưu url ảnh upload gần nhất
+  const [lastUploadedImageUrl, setLastUploadedImageUrl] = useState('');
 
   // Khôi phục state khi quay lại
   useEffect(() => {
@@ -304,10 +309,22 @@ function VocabularyManager() {
           'Content-Type': 'multipart/form-data',
         },
       });
+      setLastUploadedImageUrl(response.data.url);
       return response.data.url;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw new Error('Có lỗi xảy ra khi upload hình ảnh');
+    }
+  };
+
+  // Hàm xóa ảnh trên server
+  const deleteUploadedImage = async (url) => {
+    if (url && url.startsWith('/uploads/')) {
+      try {
+        await axios.delete('/api/upload', { params: { url } });
+      } catch (err) {
+        // Có thể log hoặc bỏ qua lỗi xóa file
+      }
     }
   };
 
@@ -328,6 +345,23 @@ function VocabularyManager() {
       scrollToPosition();
     }
   }, [loading]);
+
+  // Xóa ảnh khi input imageUrl bị xóa
+  useEffect(() => {
+    if (!formData.imageUrl && lastUploadedImageUrl) {
+      deleteUploadedImage(lastUploadedImageUrl);
+      setLastUploadedImageUrl('');
+    }
+    // eslint-disable-next-line
+  }, [formData.imageUrl]);
+  // Xóa ảnh khi đóng form
+  useEffect(() => {
+    if (!showForm && lastUploadedImageUrl) {
+      deleteUploadedImage(lastUploadedImageUrl);
+      setLastUploadedImageUrl('');
+    }
+    // eslint-disable-next-line
+  }, [showForm]);
 
   // Nếu danh sách chủ đề sẵn có rỗng, tự động chọn 'Chủ đề mới'
   useEffect(() => {
@@ -491,6 +525,7 @@ function VocabularyManager() {
                               headers: { 'Content-Type': 'multipart/form-data' },
                             });
                             setFormData((prev) => ({ ...prev, imageUrl: response.data.url }));
+                            setLastUploadedImageUrl(response.data.url);
                             window.showToast && window.showToast('Upload ảnh thành công!', 'success');
                           } catch (err) {
                             window.showToast && window.showToast('Upload ảnh thất bại!', 'error');
@@ -505,9 +540,13 @@ function VocabularyManager() {
                       <img
                         src={formData.imageUrl}
                         alt="Preview"
-                        className="w-20 h-20 object-cover rounded border"
+                        className="w-20 h-20 object-cover rounded border cursor-pointer"
                         onError={(e) => {
                           e.target.style.display = 'none';
+                        }}
+                        onClick={() => {
+                          setModalImageUrl(formData.imageUrl);
+                          setShowImageModal(true);
                         }}
                       />
                     </div>
@@ -884,6 +923,31 @@ function VocabularyManager() {
               })}
             </div>
           )}
+        </div>
+      )}
+      {/* Modal xem trước ảnh lớn */}
+      {showImageModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="bg-white rounded-lg p-2 shadow-lg relative max-w-full max-h-full flex flex-col items-center"
+            style={{ boxShadow: '0 4px 32px rgba(0,0,0,0.25)' }}
+          >
+            <img
+              src={modalImageUrl}
+              alt="Preview lớn"
+              className="object-contain"
+              style={{
+                maxWidth: '96vw',
+                maxHeight: '80vh',
+                width: 'min(700px, 96vw)',
+                height: 'auto',
+                borderRadius: '0.5rem',
+              }}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
         </div>
       )}
     </div>
