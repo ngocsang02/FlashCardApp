@@ -301,10 +301,10 @@ function VocabularyManager() {
 
   const uploadImage = async (file) => {
     const formData = new FormData();
-    formData.append('image', file);
-    
+    formData.append('image', file); // Đúng key
+
     try {
-      const response = await axios.post('/api/upload', formData, {
+      const response = await axios.post('https://flashcardapp-otyt.onrender.com/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
