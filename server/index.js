@@ -66,6 +66,9 @@ const imageUpload = multer({
   }
 });
 
+// Multer config cho upload ảnh lên Cloudinary (dùng memoryStorage)
+const memoryUpload = multer({ storage: multer.memoryStorage() });
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -268,7 +271,7 @@ app.post('/api/vocabulary/bulk', upload.single('file'), async (req, res) => {
 });
 
 // API upload ảnh lên Cloudinary
-app.post('/api/upload', upload.single('image'), async (req, res) => {
+app.post('/api/upload', memoryUpload.single('image'), async (req, res) => {
   console.log('DEBUG /api/upload req.file:', req.file);
   try {
     const file = req.file;
