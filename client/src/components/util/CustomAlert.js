@@ -7,11 +7,26 @@ const CustomAlert = ({
   onConfirm, 
   title, 
   message, 
-  type = 'confirm', // confirm, success, error, warning, info
+  type = 'confirm', // confirm, success, error, warning, info, delete
   confirmText = 'Xác nhận',
   cancelText = 'Hủy',
-  showCancel = true 
+  showCancel = true,
+  requirePassword = false,
+  passwordHint = '',
 }) => {
+  // Di chuyển hook lên đầu function
+  const [step, setStep] = React.useState('confirm'); // 'confirm' | 'password'
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setStep('confirm');
+      setPassword('');
+      setError('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const getIcon = () => {
@@ -60,10 +75,20 @@ const CustomAlert = ({
   };
 
   const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm();
+    if (step === 'confirm') {
+      setStep('password');
+      setError('');
+      setPassword('');
+      return;
     }
-    onClose();
+    if (step === 'password') {
+      if (password !== '357689') {
+        setError('Mật khẩu không đúng!');
+        return;
+      }
+      if (onConfirm) onConfirm();
+      onClose();
+    }
   };
 
   const handleCancel = () => {
@@ -90,15 +115,33 @@ const CustomAlert = ({
         {/* Title */}
         <div className="px-6 pb-2">
           <h3 className="text-xl font-bold text-gray-900 text-center">
-            {title}
+            {step === 'confirm' ? title : 'Nhập mật khẩu xác nhận'}
           </h3>
         </div>
         
         {/* Content */}
         <div className="px-6 pb-6">
-          <p className="text-gray-600 text-center leading-relaxed">
-            {message}
-          </p>
+          {step === 'confirm' ? (
+            <p className="text-gray-600 text-center leading-relaxed">
+              {message}
+            </p>
+          ) : (
+            <>
+              <p className="text-gray-600 text-center leading-relaxed mb-2">
+                Vui lòng nhập mật khẩu 6 số để xác nhận xóa.
+              </p>
+              <input
+                type="password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Nhập mật khẩu 6 số để xác nhận"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(''); }}
+                maxLength={6}
+                inputMode="numeric"
+              />
+              {error && <div className="text-xs text-red-500 mt-1">{error}</div>}
+            </>
+          )}
         </div>
         
         {/* Action Buttons */}
@@ -116,7 +159,7 @@ const CustomAlert = ({
               onClick={handleConfirm}
               className={`flex-1 px-4 py-3 text-sm font-medium text-white rounded-lg transition-colors ${getButtonColors()}`}
             >
-              {confirmText}
+              {step === 'confirm' ? confirmText : 'Xác nhận'}
             </button>
           </div>
         </div>

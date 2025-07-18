@@ -10,6 +10,8 @@ function EditLanguage() {
   const [vocabularies, setVocabularies] = useState([]);
   const [newLanguage, setNewLanguage] = useState(language);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const from = ""; // Nếu cần lấy từ router, hãy thay thế bằng giá trị phù hợp
 
   useEffect(() => {
     fetchVocabularies();
@@ -63,22 +65,35 @@ function EditLanguage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     window.showAlert({
       title: 'Xác nhận xóa ngôn ngữ',
       message: `Bạn có chắc muốn xóa tất cả từ vựng trong ngôn ngữ ${getLanguageName(language)}?`,
-      type: 'warning',
+      type: 'delete',
       confirmText: 'Xóa',
       cancelText: 'Hủy',
-      onConfirm: async () => {
-        try {
-          await axios.delete(`/api/vocabulary/language/${language}`);
-          window.showToast('Đã xóa thành công!', 'success');
-          navigate('/dashboard');
-        } catch (error) {
-          console.error('Error deleting language:', error);
-          window.showToast('Có lỗi xảy ra khi xóa', 'error');
-        }
+      requirePassword: false,
+      onConfirm: () => {
+        window.showAlert({
+          title: 'Nhập mật khẩu xác nhận',
+          message: 'Vui lòng nhập mật khẩu 6 số để xác nhận xóa.',
+          type: 'delete',
+          confirmText: 'Xác nhận',
+          cancelText: 'Hủy',
+          requirePassword: true,
+          onConfirm: async (password) => {
+            setDeleting(true);
+            try {
+              await axios.delete(`/api/vocabulary/language/${language}`);
+              window.showToast(`Đã xóa ${vocabularies.length} từ vựng trong ngôn ngữ "${language}"`, 'success');
+              navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary');
+            } catch (err) {
+              window.showToast('Lỗi khi xóa', 'error');
+            } finally {
+              setDeleting(false);
+            }
+          }
+        });
       }
     });
   };

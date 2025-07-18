@@ -33,6 +33,8 @@ const AlertManager = () => {
       confirmText={alertConfig.confirmText}
       cancelText={alertConfig.cancelText}
       showCancel={alertConfig.showCancel}
+      requirePassword={alertConfig.requirePassword || alertConfig.type === 'delete'}
+      passwordHint={alertConfig.passwordHint}
     />
   );
 };

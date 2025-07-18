@@ -466,6 +466,7 @@ function Quiz() {
                   <option value="word-to-image">🔤 Nhìn từ → Chọn hình</option>
                   <option value="image-to-word">🖼️ Nhìn hình → Chọn từ</option>
                   <option value="mixed">🎲 Hỗn hợp</option>
+                  <option value="word-to-meaning">📝 Từ → Nghĩa</option>
                 </select>
               </div>
             </div>
@@ -542,7 +543,7 @@ function Quiz() {
         <div className="bg-white rounded-lg shadow-md p-8 mb-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {currentQ.type === 'image-to-word' ? 'Chọn từ đúng cho hình ảnh này:' : 'Chọn hình ảnh đúng cho từ này:'}
+              {currentQ.type === 'word-to-meaning' ? 'Chọn nghĩa đúng cho từ này:' : currentQ.type === 'image-to-word' ? 'Chọn từ đúng cho hình ảnh này:' : 'Chọn hình ảnh đúng cho từ này:'}
             </h2>
             
             {/* Đáp án lựa chọn (4 ô) */}
@@ -613,6 +614,34 @@ function Quiz() {
                         Not found
                       </div>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {currentQ.answers.map((answer) => (
+                      <button
+                        key={answer.id}
+                        onClick={() => handleAnswerSelect(answer.id)}
+                        disabled={answered}
+                        className={`${getAnswerClass(answer.id)} p-4 border-2 border-gray-200 rounded-lg text-left transition-all duration-200`}
+                      >
+                        <div className="text-lg font-semibold text-center">{answer.text}</div>
+                        {answered && (
+                          <div className="flex justify-center mt-2">
+                            {answer.isCorrect ? (
+                              <CheckCircle className="h-6 w-6 text-green-600" />
+                            ) : selectedAnswer === answer.id ? (
+                              <XCircle className="h-6 w-6 text-red-600" />
+                            ) : null}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {currentQ.type === 'word-to-meaning' && (
+                <>
+                  <div className="text-4xl font-bold text-primary-600 mb-6 text-center">
+                    {currentQ.question}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {currentQ.answers.map((answer) => (

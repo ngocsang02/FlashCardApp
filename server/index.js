@@ -366,6 +366,44 @@ app.get('/api/quiz', async (req, res) => {
             isCorrect: v._id.toString() === correctAnswer._id.toString()
           }))
         });
+      } else if (qType === 'word-to-meaning') {
+        // Hiển thị từ, chọn nghĩa đúng
+        const pool = shuffledVocabularies.filter(
+          v => v._id.toString() !== correctAnswer._id.toString() && v.meaning !== correctAnswer.meaning
+        );
+        for (let j = pool.length - 1; j > 0; j--) {
+          const k = Math.floor(Math.random() * (j + 1));
+          [pool[j], pool[k]] = [pool[k], pool[j]];
+        }
+        const usedMeanings = new Set([correctAnswer.meaning]);
+        const wrongAnswers = [];
+        for (let w = 0; w < pool.length && wrongAnswers.length < 3; w++) {
+          if (!usedMeanings.has(pool[w].meaning)) {
+            wrongAnswers.push(pool[w]);
+            usedMeanings.add(pool[w].meaning);
+          }
+        }
+        while (wrongAnswers.length < 3) {
+          const candidate = allVocabularies[Math.floor(Math.random() * allVocabularies.length)];
+          if (!usedMeanings.has(candidate.meaning)) {
+            wrongAnswers.push(candidate);
+            usedMeanings.add(candidate.meaning);
+          }
+        }
+        const allAnswers = [correctAnswer, ...wrongAnswers].sort(() => Math.random() - 0.5);
+        questions.push({
+          type: 'word-to-meaning',
+          question: correctAnswer.word,
+          vocabulary: correctAnswer,
+          answers: allAnswers.map(v => ({
+            id: v._id,
+            text: v.meaning,
+            word: v.word,
+            topic: v.topic,
+            imageUrl: v.imageUrl,
+            isCorrect: v._id.toString() === correctAnswer._id.toString()
+          }))
+        });
       } else if (qType === 'image-fill-word') {
         // 1 hình và input điền từ
         questions.push({

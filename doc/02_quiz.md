@@ -2,7 +2,15 @@
 
 ## Mô tả
 
-Tính năng này cho phép người dùng luyện tập từ vựng thông qua các bài kiểm tra tự động sinh từ danh sách từ vựng đã có. Hỗ trợ nhiều loại câu hỏi (chọn hình, chọn từ, điền từ), chọn số lượng câu hỏi, ngôn ngữ, chủ đề.
+Tính năng này cho phép người dùng luyện tập từ vựng thông qua các bài kiểm tra tự động sinh từ danh sách từ vựng đã có. Hỗ trợ nhiều loại câu hỏi (chọn hình, chọn từ, điền từ, chọn nghĩa), chọn số lượng câu hỏi, ngôn ngữ, chủ đề.
+
+### Các loại bài kiểm tra:
+
+- **Nhìn từ → Chọn hình** (`word-to-image`): Hiển thị từ, chọn hình ảnh đúng.
+- **Nhìn hình → Chọn từ** (`image-to-word`): Hiển thị hình, chọn từ đúng.
+- **Điền từ vào hình** (`image-fill-word`): Hiển thị hình, người dùng tự điền từ.
+- **Từ chọn nghĩa** (`word-to-meaning`): Hiển thị từ, chọn nghĩa đúng trong 4 đáp án.
+- **Hỗn hợp** (`mixed`): Ngẫu nhiên các loại trên.
 
 ## Luồng xử lý chính
 
@@ -36,6 +44,7 @@ Tính năng này cho phép người dùng luyện tập từ vựng thông qua c
 - **Hàm:** `handleAnswerSelect(answerId)`
   - Kiểm tra đáp án, cập nhật điểm số, hiển thị đáp án đúng/sai.
   - Nếu đúng, tự động chuyển sang câu tiếp theo sau 1s; nếu sai, hiển thị đáp án đúng.
+  - Với loại "Từ chọn nghĩa", hiển thị từ, chọn nghĩa đúng trong 4 đáp án.
 
 ### 5. Chuyển câu hỏi và kết thúc bài kiểm tra
 
@@ -51,11 +60,55 @@ Tính năng này cho phép người dùng luyện tập từ vựng thông qua c
 
 - `client/src/components/quiz/Quiz.js`
 - API: `/api/quiz`, `/api/languages`, `/api/topics/:language`
+- Backend: `server/index.js` (xử lý sinh câu hỏi cho các loại quiz, bao gồm loại mới "Từ chọn nghĩa")
 
 ## Hướng dẫn sử dụng
 
 1. Vào trang "Bài kiểm tra" từ trang chủ.
-2. Chọn ngôn ngữ, chủ đề, loại bài kiểm tra và số lượng câu hỏi.
+2. Chọn ngôn ngữ, chủ đề, loại bài kiểm tra (bao gồm "Từ → Nghĩa") và số lượng câu hỏi.
 3. Nhấn "Bắt đầu" để làm bài.
 4. Trả lời từng câu hỏi, xem kết quả và đáp án sau khi hoàn thành.
 5. Có thể làm lại bài kiểm tra hoặc thay đổi cấu hình để luyện tập tiếp.
+
+## Ví dụ minh họa: Loại "Từ chọn nghĩa" (word-to-meaning)
+
+### Mô tả
+
+- Hệ thống hiển thị một từ vựng, ví dụ: **"apple"**
+- Có 4 đáp án là nghĩa, ví dụ:
+  1. Quả táo
+  2. Quả chuối
+  3. Quả cam
+  4. Quả dưa hấu
+- Người dùng chọn đáp án đúng (Quả táo).
+
+### Dữ liệu mẫu trả về từ API
+
+```json
+{
+  "type": "word-to-meaning",
+  "question": "apple",
+  "answers": [
+    { "id": "1", "text": "Quả táo", "isCorrect": true },
+    { "id": "2", "text": "Quả chuối", "isCorrect": false },
+    { "id": "3", "text": "Quả cam", "isCorrect": false },
+    { "id": "4", "text": "Quả dưa hấu", "isCorrect": false }
+  ]
+}
+```
+
+### Giao diện minh họa
+
+- **Câu hỏi:**
+  > Chọn nghĩa đúng cho từ này:
+  >
+  > **apple**
+- **Đáp án:**
+  - [ ] Quả táo
+  - [ ] Quả chuối
+  - [ ] Quả cam
+  - [ ] Quả dưa hấu
+
+Người dùng chọn đáp án, hệ thống sẽ báo đúng/sai và chuyển sang câu tiếp theo.
+
+<!-- Nếu muốn chèn hình ảnh thực tế, hãy thêm ảnh chụp màn hình giao diện quiz tại đây. -->

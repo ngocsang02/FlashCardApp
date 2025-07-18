@@ -65,43 +65,67 @@ function VocabularyList() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa từ vựng này?')) {
-      try {
-        await axios.delete(`/api/vocabulary/${id}`);
-        fetchVocabularies();
-      } catch (error) {
-        console.error('Error deleting vocabulary:', error);
-        alert('Có lỗi xảy ra khi xóa từ vựng');
+    window.showAlert({
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa từ vựng này?',
+      type: 'delete',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      requirePassword: true,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`/api/vocabulary/${id}`);
+          fetchVocabularies();
+        } catch (error) {
+          console.error('Error deleting vocabulary:', error);
+          alert('Có lỗi xảy ra khi xóa từ vựng');
+        }
       }
-    }
+    });
   };
 
   const handleDeleteTopic = async (language, topic) => {
     const languageName = getLanguageName(language);
-    if (window.confirm(`Bạn có chắc muốn xóa tất cả từ vựng trong chủ đề "${topic}" của ${languageName}?`)) {
-      try {
-        const response = await axios.delete(`/api/vocabulary/topic/${encodeURIComponent(topic)}?language=${language}`);
-        alert(response.data.message);
-        fetchVocabularies();
-      } catch (error) {
-        console.error('Error deleting topic:', error);
-        alert('Có lỗi xảy ra khi xóa chủ đề');
+    window.showAlert({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc muốn xóa tất cả từ vựng trong chủ đề "${topic}" của ${languageName}?`,
+      type: 'delete',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      requirePassword: true,
+      onConfirm: async () => {
+        try {
+          const response = await axios.delete(`/api/vocabulary/topic/${encodeURIComponent(topic)}?language=${language}`);
+          alert(response.data.message);
+          fetchVocabularies();
+        } catch (error) {
+          console.error('Error deleting topic:', error);
+          alert('Có lỗi xảy ra khi xóa chủ đề');
+        }
       }
-    }
+    });
   };
 
   const handleDeleteLanguage = async (language) => {
     const languageName = getLanguageName(language);
-    if (window.confirm(`Bạn có chắc muốn xóa tất cả từ vựng trong ngôn ngữ ${languageName}?`)) {
-      try {
-        const response = await axios.delete(`/api/vocabulary/language/${language}`);
-        alert(response.data.message);
-        fetchVocabularies();
-      } catch (error) {
-        console.error('Error deleting language:', error);
-        alert('Có lỗi xảy ra khi xóa ngôn ngữ');
+    window.showAlert({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc muốn xóa tất cả từ vựng trong ngôn ngữ ${languageName}?`,
+      type: 'delete',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      requirePassword: true,
+      onConfirm: async () => {
+        try {
+          const response = await axios.delete(`/api/vocabulary/language/${language}`);
+          alert(response.data.message);
+          fetchVocabularies();
+        } catch (error) {
+          console.error('Error deleting language:', error);
+          alert('Có lỗi xảy ra khi xóa ngôn ngữ');
+        }
       }
-    }
+    });
   };
 
   const handleEdit = (vocab) => {

@@ -10,6 +10,8 @@ function EditTopic() {
   const [vocabularies, setVocabularies] = useState([]);
   const [newTopic, setNewTopic] = useState(decodeURIComponent(topic));
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const from = ""; // Nếu cần lấy từ router, hãy thay thế bằng giá trị phù hợp
 
   useEffect(() => {
     fetchVocabularies();
@@ -63,22 +65,35 @@ function EditTopic() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     window.showAlert({
       title: 'Xác nhận xóa chủ đề',
-      message: `Bạn có chắc muốn xóa tất cả từ vựng trong chủ đề "${decodeURIComponent(topic)}"?`,
-      type: 'warning',
+      message: `Bạn có chắc muốn xóa tất cả từ vựng trong chủ đề ${decodeURIComponent(topic)}?`,
+      type: 'delete',
       confirmText: 'Xóa',
       cancelText: 'Hủy',
-      onConfirm: async () => {
-        try {
-          await axios.delete(`/api/vocabulary/topic/${encodeURIComponent(decodeURIComponent(topic))}?language=${language}`);
-          window.showToast('Đã xóa thành công!', 'success');
-          navigate('/dashboard');
-        } catch (error) {
-          console.error('Error deleting topic:', error);
-          window.showToast('Có lỗi xảy ra khi xóa', 'error');
-        }
+      requirePassword: false,
+      onConfirm: () => {
+        window.showAlert({
+          title: 'Nhập mật khẩu xác nhận',
+          message: 'Vui lòng nhập mật khẩu 6 số để xác nhận xóa.',
+          type: 'delete',
+          confirmText: 'Xác nhận',
+          cancelText: 'Hủy',
+          requirePassword: true,
+          onConfirm: async (password) => {
+            setDeleting(true);
+            try {
+              await axios.delete(`/api/vocabulary/topic/${encodeURIComponent(decodeURIComponent(topic))}?language=${language}`);
+              window.showToast(`Đã xóa chủ đề "${decodeURIComponent(topic)}"!`, 'success');
+              navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary');
+            } catch (err) {
+              window.showToast('Lỗi khi xóa', 'error');
+            } finally {
+              setDeleting(false);
+            }
+          }
+        });
       }
     });
   };

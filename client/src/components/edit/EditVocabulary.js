@@ -67,9 +67,10 @@ function EditVocabulary() {
     window.showAlert({
       title: 'Xác nhận xóa',
       message: 'Bạn có chắc muốn xóa từ vựng này?',
-      type: 'warning',
+      type: 'delete',
       confirmText: 'Xóa',
       cancelText: 'Hủy',
+      requirePassword: true,
       onConfirm: async () => {
         setDeleting(true);
         try {
