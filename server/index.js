@@ -4,7 +4,16 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 require('dotenv').config();
+
+// Cấu hình Cloudinary
+cloudinary.config({
+  cloud_name: 'dgln3kmbt',
+  api_key: '123256545382126',
+  api_secret: '3dRan57a2FrSUIcnoiBxkGQso5I'
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -258,12 +267,23 @@ app.post('/api/vocabulary/bulk', upload.single('file'), async (req, res) => {
   }
 });
 
-// API upload ảnh
-app.post('/api/upload', imageUpload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  // Trả về đường dẫn tĩnh để frontend dùng
-  const url = `/uploads/${req.file.filename}`;
-  res.json({ url });
+// API upload ảnh lên Cloudinary
+app.post('/api/upload', upload.single('image'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+
+    let stream = cloudinary.uploader.upload_stream(
+      { folder: 'vocabularies' },
+      (error, result) => {
+        if (error) return res.status(500).json({ error: error.message });
+        return res.json({ url: result.secure_url });
+      }
+    );
+    streamifier.createReadStream(file.buffer).pipe(stream);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // API xóa ảnh

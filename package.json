@@ -11,6 +11,7 @@
     "install-all": "npm install && cd client && npm install"
   },
   "dependencies": {
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.3.1",
