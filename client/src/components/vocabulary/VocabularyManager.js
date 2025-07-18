@@ -536,19 +536,24 @@ function VocabularyManager() {
                     }}
                   />
                   {formData.imageUrl && (
-                    <div className="mt-2">
+                    <div className="mt-2 flex items-center">
                       <img
                         src={formData.imageUrl}
                         alt="Preview"
-                        className="w-20 h-20 object-cover rounded border cursor-pointer"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
+                        className="h-20 w-20 object-cover rounded shadow border cursor-pointer"
                         onClick={() => {
                           setModalImageUrl(formData.imageUrl);
                           setShowImageModal(true);
                         }}
+                        onError={e => e.target.style.display='none'}
                       />
+                      <button
+                        type="button"
+                        className="ml-2 px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-xs"
+                        onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                      >
+                        Xóa ảnh
+                      </button>
                     </div>
                   )}
                 </div>
@@ -868,23 +873,18 @@ function VocabularyManager() {
                                         <p className="text-gray-600 mb-3">{vocab.meaning}</p>
                                         <div className="flex items-center space-x-4">
                                           <div className="w-16 h-16 rounded-lg border overflow-hidden">
-                                            {vocab.imageUrl ? (
+                                            {vocab.imageUrl && vocab.imageUrl.startsWith('http') ? (
                                               <img
                                                 src={vocab.imageUrl}
-                                                alt={vocab.word}
+                                                alt="Ảnh từ vựng"
                                                 className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                  e.target.style.display = 'none';
-                                                  e.target.nextSibling.style.display = 'flex';
-                                                }}
+                                                onError={e => e.target.style.display='none'}
                                               />
-                                            ) : null}
-                                            <div 
-                                              className={`w-full h-full flex items-center justify-center text-xs text-gray-500 bg-gray-100 ${vocab.imageUrl ? 'hidden' : 'flex'}`}
-                                              style={{ display: vocab.imageUrl ? 'none' : 'flex' }}
-                                            >
-                                              Not found
-                                            </div>
+                                            ) : (
+                                              <div className="w-16 h-16 flex items-center justify-center text-xs text-gray-500 bg-gray-100 rounded border">
+                                                Not found
+                                              </div>
+                                            )}
                                           </div>
                                           <span className="text-sm text-gray-500">
                                             Thêm lúc: {new Date(vocab.createdAt).toLocaleDateString('vi-VN')}
