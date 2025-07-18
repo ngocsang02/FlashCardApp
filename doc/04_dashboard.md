@@ -49,3 +49,10 @@ Dashboard cung cấp cái nhìn tổng quan về số lượng từ vựng, ch�
 2. Xem tổng quan số lượng từ vựng, chủ đề, ngôn ngữ.
 3. Lọc theo ngôn ngữ/chủ đề để xem chi tiết.
 4. Sử dụng các nút chỉnh sửa/xóa để thao tác nhanh với chủ đề, ngôn ngữ, từ vựng.
+
+## Lưu ý khi xóa ngôn ngữ hoặc chủ đề
+
+- Khi nhấn "Xóa" ở bất kỳ ngôn ngữ hoặc chủ đề nào, hệ thống sẽ yêu cầu xác nhận 2 bước:
+  1. Xác nhận ý định xóa qua popup.
+  2. Nhập đúng mật khẩu 6 số để xác nhận xóa.
+- Nếu nhập sai mật khẩu, thao tác xóa sẽ không được thực hiện và bạn sẽ nhận được thông báo lỗi.

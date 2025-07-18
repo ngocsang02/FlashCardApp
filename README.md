@@ -152,3 +152,10 @@ Mọi đóng góp đều được chào đón! Hãy tạo issue hoặc pull requ
 ## License
 
 MIT License
+
+## Bảo vệ thao tác xóa dữ liệu
+
+- Tất cả các thao tác xóa ngôn ngữ hoặc chủ đề đều yêu cầu xác nhận 2 bước:
+  1. Xác nhận ý định xóa qua popup.
+  2. Nhập đúng mật khẩu 6 số để xác nhận xóa.
+- Nếu nhập sai mật khẩu, thao tác xóa sẽ không được thực hiện.

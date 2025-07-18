@@ -75,6 +75,21 @@ Tính năng này cho phép người dùng thêm, sửa, xóa, xem và import t�
 - Chỉ cho phép mỗi từ vựng có 1 ảnh duy nhất.
 - Ảnh upload sẽ được lưu vào thư mục `uploads/` trên server, và có thể truy cập qua URL `/uploads/tenfile.png`.
 
+## Xóa ngôn ngữ/chủ đề (Bảo vệ bằng mật khẩu)
+
+Khi bạn muốn xóa một ngôn ngữ hoặc chủ đề, hệ thống sẽ yêu cầu xác nhận 2 bước để đảm bảo an toàn dữ liệu:
+
+1. **Bước 1:** Nhấn nút "Xóa" sẽ hiện popup xác nhận với nội dung:
+   - Tiêu đề: "Xác nhận xóa ngôn ngữ" hoặc "Xác nhận xóa chủ đề"
+   - Nội dung: "Bạn có chắc muốn xóa tất cả từ vựng trong ngôn ngữ/chủ đề này?"
+2. **Bước 2:** Nếu nhấn "Xóa" ở popup xác nhận, popup sẽ chuyển sang nhập mật khẩu:
+   - Tiêu đề: "Nhập mật khẩu xác nhận"
+   - Nội dung: "Vui lòng nhập mật khẩu 6 số để xác nhận xóa."
+   - Nếu nhập đúng mật khẩu, hệ thống sẽ thực hiện xóa và hiển thị thông báo thành công.
+   - Nếu nhập sai, popup sẽ hiển thị lỗi "Mật khẩu không đúng!" và yêu cầu nhập lại.
+
+Chỉ khi nhập đúng mật khẩu, thao tác xóa mới được thực hiện.
+
 ## Các file liên quan
 
 - `
