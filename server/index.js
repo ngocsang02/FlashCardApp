@@ -269,10 +269,13 @@ app.post('/api/vocabulary/bulk', upload.single('file'), async (req, res) => {
 
 // API upload ảnh lên Cloudinary
 app.post('/api/upload', upload.single('image'), async (req, res) => {
+  console.log('DEBUG /api/upload req.file:', req.file);
   try {
     const file = req.file;
-    if (!file) return res.status(400).json({ error: 'No file uploaded' });
-
+    if (!file) {
+      console.log('DEBUG /api/upload: No file uploaded');
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
     let stream = cloudinary.uploader.upload_stream(
       { folder: 'vocabularies' },
       (error, result) => {
@@ -282,6 +285,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
     );
     streamifier.createReadStream(file.buffer).pipe(stream);
   } catch (err) {
+    console.log('DEBUG /api/upload error:', err);
     res.status(500).json({ error: err.message });
   }
 });
