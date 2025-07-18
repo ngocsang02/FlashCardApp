@@ -519,6 +519,23 @@ app.delete('/api/vocabulary/:id', async (req, res) => {
     if (!vocabulary) {
       return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
     }
+
+    // Nếu có ảnh Cloudinary thì xóa luôn
+    if (vocabulary.imageUrl && vocabulary.imageUrl.includes('cloudinary.com')) {
+      // Lấy public_id từ URL
+      const matches = vocabulary.imageUrl.match(/upload\/v\d+\/(.+)\.[a-zA-Z]+$/);
+      if (matches && matches[1]) {
+        const publicId = matches[1];
+        cloudinary.uploader.destroy(publicId, (error, result) => {
+          if (error) {
+            console.error('Lỗi xóa ảnh Cloudinary:', error);
+          } else {
+            console.log('Kết quả xóa ảnh Cloudinary:', result);
+          }
+        });
+      }
+    }
+
     res.json({ message: 'Đã xóa từ vựng thành công' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -534,6 +551,25 @@ app.delete('/api/vocabulary/topic/:topic', async (req, res) => {
     let query = { topic };
     if (language) {
       query.language = language;
+    }
+    
+    // Lấy tất cả vocabularies sẽ bị xóa
+    const vocabularies = await Vocabulary.find(query);
+    // Xóa ảnh Cloudinary nếu có
+    for (const vocab of vocabularies) {
+      if (vocab.imageUrl && vocab.imageUrl.includes('cloudinary.com')) {
+        const matches = vocab.imageUrl.match(/upload\/v\d+\/(.+)\.[a-zA-Z]+$/);
+        if (matches && matches[1]) {
+          const publicId = matches[1];
+          cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error) {
+              console.error('Lỗi xóa ảnh Cloudinary:', error);
+            } else {
+              console.log('Kết quả xóa ảnh Cloudinary:', result);
+            }
+          });
+        }
+      }
     }
     
     const result = await Vocabulary.deleteMany(query);
@@ -555,6 +591,24 @@ app.delete('/api/vocabulary/topic/:topic', async (req, res) => {
 app.delete('/api/vocabulary/language/:language', async (req, res) => {
   try {
     const { language } = req.params;
+    // Lấy tất cả vocabularies sẽ bị xóa
+    const vocabularies = await Vocabulary.find({ language });
+    // Xóa ảnh Cloudinary nếu có
+    for (const vocab of vocabularies) {
+      if (vocab.imageUrl && vocab.imageUrl.includes('cloudinary.com')) {
+        const matches = vocab.imageUrl.match(/upload\/v\d+\/(.+)\.[a-zA-Z]+$/);
+        if (matches && matches[1]) {
+          const publicId = matches[1];
+          cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error) {
+              console.error('Lỗi xóa ảnh Cloudinary:', error);
+            } else {
+              console.log('Kết quả xóa ảnh Cloudinary:', result);
+            }
+          });
+        }
+      }
+    }
     const result = await Vocabulary.deleteMany({ language });
     
     if (result.deletedCount === 0) {
