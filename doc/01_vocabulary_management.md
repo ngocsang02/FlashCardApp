@@ -51,6 +51,7 @@ Tính năng này cho phép người dùng thêm, sửa, xóa, xem và import t�
 - **Hàm:** `handleDelete(id)`
   - Gọi API `DELETE /api/vocabulary/:id` để xóa từ vựng.
   - Sau khi thành công, gọi lại `fetchVocabularies()` để cập nhật danh sách.
+  - **Tự động xóa ảnh trên Cloudinary:** Nếu từ vựng có ảnh lưu trên Cloudinary, backend sẽ tự động xóa ảnh đó khỏi Cloudinary khi xóa từ vựng.
 
 ### 6. Lọc/tìm kiếm từ vựng
 
@@ -64,6 +65,7 @@ Tính năng này cho phép người dùng thêm, sửa, xóa, xem và import t�
 - **Component:** `EditTopic.js`, `EditLanguage.js`
 - **API:** `/api/vocabulary/topic/:topic`, `/api/vocabulary/language/:language`
   - Cho phép đổi tên, xóa chủ đề/ngôn ngữ và cập nhật lại danh sách từ vựng liên quan.
+  - **Tự động xóa ảnh trên Cloudinary:** Khi xóa chủ đề hoặc ngôn ngữ, backend sẽ tự động xóa tất cả ảnh Cloudinary liên quan đến các từ vựng bị xóa.
 
 ## Tính năng nâng cao về quản lý hình ảnh (2024)
 
