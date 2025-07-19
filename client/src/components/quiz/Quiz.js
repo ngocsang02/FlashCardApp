@@ -69,6 +69,7 @@ function Quiz() {
           confirmText: 'Thoát',
           cancelText: 'Hủy',
           showCancel: true,
+          requirePassword: false,
           onConfirm: () => {
             allowNavigateRef.current = true;
             navigate(anchor.pathname + anchor.search + anchor.hash, { replace: false });
@@ -520,6 +521,7 @@ function Quiz() {
                     confirmText: 'Thoát',
                     cancelText: 'Tiếp tục',
                     showCancel: true,
+                    requirePassword: false,
                     onConfirm: () => {
                       resetQuiz();
                     }
