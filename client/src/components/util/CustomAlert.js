@@ -16,16 +16,24 @@ const CustomAlert = ({
 }) => {
   // Di chuyển hook lên đầu function
   const [step, setStep] = React.useState('confirm'); // 'confirm' | 'password'
-  const [password, setPassword] = React.useState('');
+  const [password, setPassword] = React.useState(['', '', '', '', '', '']);
   const [error, setError] = React.useState('');
+  const inputRefs = React.useRef([]);
 
   React.useEffect(() => {
     if (!isOpen) {
       setStep('confirm');
-      setPassword('');
+      setPassword(['', '', '', '', '', '']);
       setError('');
     }
   }, [isOpen]);
+
+  // Tạo refs cho 6 input fields
+  React.useEffect(() => {
+    inputRefs.current = inputRefs.current.slice(0, 6);
+  }, []);
+
+
 
   if (!isOpen) return null;
 
@@ -74,12 +82,65 @@ const CustomAlert = ({
     }
   };
 
+  const handleKeyDown = (index, e) => {
+    // Xử lý phím Backspace
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      
+      if (password[index]) {
+        // Nếu ô hiện tại có giá trị, xóa giá trị đó
+        const newPassword = [...password];
+        newPassword[index] = '';
+        setPassword(newPassword);
+      } else if (index > 0) {
+        // Nếu ô hiện tại trống và không phải ô đầu tiên, xóa ô trước rồi focus về đó
+        const newPassword = [...password];
+        newPassword[index - 1] = '';
+        setPassword(newPassword);
+        inputRefs.current[index - 1]?.focus();
+      }
+    }
+    
+    // Xử lý nhập số
+    if (/^\d$/.test(e.key)) {
+      e.preventDefault();
+      const digit = e.key;
+      
+      // Kiểm tra xem giá trị có thực sự thay đổi không
+      if (password[index] === digit) return;
+      
+      const newPassword = [...password];
+      newPassword[index] = digit;
+      setPassword(newPassword);
+      setError('');
+
+      // Tự động chuyển focus đến ô tiếp theo
+      if (index < 5) {
+        setTimeout(() => {
+          if (inputRefs.current[index + 1]) {
+            inputRefs.current[index + 1].focus();
+            inputRefs.current[index + 1].setSelectionRange(0, 0);
+          }
+        }, 100);
+      }
+    }
+    
+    // Ngăn chặn các phím không mong muốn
+    if (!/^\d$/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const handleConfirm = () => {
     if (step === 'confirm') {
       if (requirePassword) {
         setStep('password');
         setError('');
-        setPassword('');
+        setPassword(['', '', '', '', '', '']);
+        // Focus vào ô đầu tiên khi chuyển sang bước nhập mật khẩu
+        setTimeout(() => {
+          inputRefs.current[0]?.focus();
+        }, 100);
         return;
       } else {
         // Nếu không yêu cầu mật khẩu, thực hiện ngay
@@ -89,8 +150,14 @@ const CustomAlert = ({
       }
     }
     if (step === 'password') {
-      if (password !== '357689') {
+      const passwordString = password.join('');
+      if (passwordString !== '357689') {
         setError('Mật khẩu không đúng!');
+        // Reset password và focus vào ô đầu tiên
+        setPassword(['', '', '', '', '', '']);
+        setTimeout(() => {
+          inputRefs.current[0]?.focus();
+        }, 100);
         return;
       }
       if (onConfirm) onConfirm();
@@ -134,19 +201,43 @@ const CustomAlert = ({
             </p>
           ) : (
             <>
-              <p className="text-gray-600 text-center leading-relaxed mb-2">
+              <p className="text-gray-600 text-center leading-relaxed mb-4">
                 Vui lòng nhập mật khẩu 6 số để xác nhận xóa.
               </p>
-              <input
-                type="password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Nhập mật khẩu 6 số để xác nhận"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setError(''); }}
-                maxLength={6}
-                inputMode="numeric"
-              />
-              {error && <div className="text-xs text-red-500 mt-1">{error}</div>}
+              
+              {/* Password Input Fields */}
+              <div className="flex justify-center space-x-2 mb-4">
+                {password.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={el => inputRefs.current[index] = el}
+                    type="text"
+                    className={`w-12 h-12 text-center text-lg font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                      digit 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+                    }`}
+                    value={digit}
+
+                    onKeyDown={e => handleKeyDown(index, e)}
+                    onPaste={e => e.preventDefault()}
+                    onDrop={e => e.preventDefault()}
+                    onInput={e => e.preventDefault()}
+                    onChange={e => e.preventDefault()}
+                    maxLength={1}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    spellCheck="false"
+                    readOnly
+                  />
+                ))}
+              </div>
+              
+              {error && (
+                <div className="text-sm text-red-500 text-center mt-2">
+                  {error}
+                </div>
+              )}
             </>
           )}
         </div>
