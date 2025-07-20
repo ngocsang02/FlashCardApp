@@ -444,7 +444,7 @@ function Dashboard() {
                     <div className="flex items-center space-x-3">
                       <h3 className="text-lg font-semibold text-gray-900">{vocab.word}</h3>
                       <span className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full">
-                        {vocab.language}
+                        {getLanguageName(vocab.language)}
                       </span>
                       <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                         {vocab.topic}

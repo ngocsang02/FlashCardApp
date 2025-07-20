@@ -1,8 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from '../../axiosConfig';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Upload, Trash2, Eye, EyeOff, List, ChevronRight, ChevronDown, Globe, FolderOpen, FileText, ArrowLeft, BookOpen, MoreVertical, Edit } from 'lucide-react';
+import { Plus, Upload, Trash2, Eye, EyeOff, List, ChevronRight, ChevronDown, Globe, FolderOpen, FileText, ArrowLeft, BookOpen, MoreVertical, Edit, X } from 'lucide-react';
 import DropdownMenu from '../util/DropdownMenu';
+
+// Component dropdown tùy chỉnh cho ngôn ngữ
+const LanguageDropdown = ({ value, onChange, className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  
+  const languages = [
+    { value: 'english', label: 'Tiếng Anh' },
+    { value: 'korean', label: 'Tiếng Hàn' },
+    { value: 'japanese', label: 'Tiếng Nhật' },
+    { value: 'chinese', label: 'Tiếng Trung' },
+    { value: 'other', label: 'Khác...' }
+  ];
+  
+  const selectedLanguage = languages.find(lang => lang.value === value) || languages[0];
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  return (
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-left flex items-center justify-between"
+      >
+        <span>{selectedLanguage.label}</span>
+        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+          {languages.map((language) => (
+            <button
+              key={language.value}
+              type="button"
+              onClick={() => {
+                onChange(language.value);
+                setIsOpen(false);
+              }}
+              className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 first:rounded-t-md last:rounded-b-md"
+            >
+              {language.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function VocabularyManager() {
   const navigate = useNavigate();
@@ -14,13 +76,13 @@ function VocabularyManager() {
     word: '',
     meaning: '',
     imageUrl: '',
-    language: 'english',
+    language: '',
     topic: ''
   });
   const [csvFile, setCsvFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [csvTopic, setCsvTopic] = useState('');
-  const [csvLanguage, setCsvLanguage] = useState('english');
+  const [csvLanguage, setCsvLanguage] = useState('');
   const [csvCustomLanguage, setCsvCustomLanguage] = useState('');
   const [showList, setShowList] = useState(false);
   const [expandedLanguages, setExpandedLanguages] = useState({});
@@ -38,6 +100,8 @@ function VocabularyManager() {
   const [modalImageUrl, setModalImageUrl] = useState('');
   // Thêm biến lưu url ảnh upload gần nhất
   const [lastUploadedImageUrl, setLastUploadedImageUrl] = useState('');
+  const [defaultLanguage, setDefaultLanguage] = useState('');
+  const [showDefaultLanguageModal, setShowDefaultLanguageModal] = useState(false);
 
   // Khôi phục state khi quay lại
   useEffect(() => {
@@ -51,6 +115,7 @@ function VocabularyManager() {
 
   useEffect(() => {
     fetchVocabularies();
+    fetchDefaultLanguage();
   }, []);
 
   // Hàm lấy vocabularies, luôn lấy mới từ server
@@ -67,8 +132,51 @@ function VocabularyManager() {
     }
   };
 
+  // Hàm lấy ngôn ngữ default từ server
+  const fetchDefaultLanguage = async () => {
+    try {
+      const response = await axios.get('/api/settings/default-language');
+      setDefaultLanguage(response.data.defaultLanguage || '');
+      
+      // Set default language cho form và CSV khi khởi tạo
+      if (response.data.defaultLanguage) {
+        setFormData(prev => ({ ...prev, language: response.data.defaultLanguage }));
+        setCsvLanguage(response.data.defaultLanguage);
+      }
+    } catch (error) {
+      console.error('Error fetching default language:', error);
+    }
+  };
+
+  // Hàm set ngôn ngữ default
+  const setDefaultLanguageAPI = async (language) => {
+    try {
+      await axios.post('/api/settings/default-language', { defaultLanguage: language });
+      setDefaultLanguage(language);
+      
+      // Cập nhật ngôn ngữ cho form và CSV nếu đang sử dụng ngôn ngữ mặc định cũ
+      if (formData.language === defaultLanguage) {
+        setFormData(prev => ({ ...prev, language: language }));
+      }
+      if (csvLanguage === defaultLanguage) {
+        setCsvLanguage(language);
+      }
+      
+      window.showToast('Đã cập nhật ngôn ngữ mặc định!', 'success');
+    } catch (error) {
+      console.error('Error setting default language:', error);
+      window.showToast('Có lỗi xảy ra khi cập nhật ngôn ngữ mặc định', 'error');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation cho ngôn ngữ tùy chỉnh
+    if (showCustomLanguageInput && !formData.language.trim()) {
+      window.showToast('Vui lòng nhập tên ngôn ngữ tùy chỉnh', 'warning');
+      return;
+    }
     
     try {
       let imageUrl = formData.imageUrl;
@@ -86,9 +194,10 @@ function VocabularyManager() {
       await axios.post('/api/vocabulary', submitData);
       
       // Reset form
-      setFormData({ word: '', meaning: '', imageUrl: '', language: 'english', topic: '' });
+      setFormData({ word: '', meaning: '', imageUrl: '', language: defaultLanguage || 'english', topic: '' });
       setSelectedTopicOption('existing');
       setShowCustomTopicInput(false);
+      setShowCustomLanguageInput(false);
       setImageInputType('url');
       setImageFile(null);
       setImagePreview('');
@@ -114,6 +223,10 @@ function VocabularyManager() {
       window.showToast('Vui lòng nhập chủ đề cho file CSV', 'warning');
       return;
     }
+    if (showCustomLanguageInputCsv && !csvLanguage.trim()) {
+      window.showToast('Vui lòng nhập tên ngôn ngữ tùy chỉnh cho file CSV', 'warning');
+      return;
+    }
 
     setUploading(true);
     const formData = new FormData();
@@ -129,7 +242,8 @@ function VocabularyManager() {
       });
       setCsvFile(null);
       setCsvTopic('');
-      setCsvLanguage('english');
+      setCsvLanguage(defaultLanguage || 'english');
+      setShowCustomLanguageInputCsv(false);
       fetchVocabularies();
       window.showToast(`Import thành công! Đã thêm ${response.data.length} từ vựng.`, 'success');
     } catch (error) {
@@ -201,6 +315,7 @@ function VocabularyManager() {
       'japanese': 'Tiếng Nhật',
       'chinese': 'Tiếng Trung'
     };
+    // Nếu code không có trong danh sách cố định, trả về chính nó (ngôn ngữ tùy chỉnh)
     return languages[code] || code;
   };
 
@@ -371,6 +486,37 @@ function VocabularyManager() {
     }
   }, [showForm, formData.language]);
 
+  // Hàm kiểm tra validation cho form
+  const getFormValidationErrors = () => {
+    const errors = [];
+    
+    if (!formData.word.trim()) {
+      errors.push('Từ vựng');
+    }
+    
+    if (!formData.meaning.trim()) {
+      errors.push('Nghĩa');
+    }
+    
+    // Ngôn ngữ luôn bắt buộc, không phụ thuộc vào default language
+    if (showCustomLanguageInput && !formData.language.trim()) {
+      errors.push('Ngôn ngữ tùy chỉnh');
+    } else if (!showCustomLanguageInput && !formData.language) {
+      errors.push('Ngôn ngữ');
+    }
+    
+    if (!formData.topic.trim()) {
+      errors.push('Chủ đề');
+    }
+    
+    // Hình ảnh là optional, không cần validation
+    
+    return errors;
+  };
+
+  const formValidationErrors = getFormValidationErrors();
+  const isFormValid = formValidationErrors.length === 0;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -418,8 +564,20 @@ function VocabularyManager() {
 
       {/* Add Vocabulary Form */}
       {showForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Thêm từ vựng mới</h2>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6 relative">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Thêm từ vựng mới</h2>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowDefaultLanguageModal(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                title="Cài đặt ngôn ngữ mặc định"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -439,26 +597,37 @@ function VocabularyManager() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Ngôn ngữ
                 </label>
-                <select
-                  value={formData.language || (showCustomLanguageInput ? 'other' : 'english')}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="english">Tiếng Anh</option>
-                  <option value="korean">Tiếng Hàn</option>
-                  <option value="japanese">Tiếng Nhật</option>
-                  <option value="chinese">Tiếng Trung</option>
-                  <option value="other">Khác...</option>
-                </select>
+                <LanguageDropdown
+                  value={showCustomLanguageInput ? 'other' : (formData.language || 'english')}
+                  onChange={handleLanguageChange}
+                  className="w-full"
+                />
+                {!showCustomLanguageInput && formData.language && (
+                  <p className="text-sm text-blue-600 mt-1">
+                    Đã chọn: <strong>{getLanguageName(formData.language)}</strong>
+                  </p>
+                )}
+                {defaultLanguage && formData.language === defaultLanguage && (
+                  <p className="text-sm text-green-600 mt-1">
+                    Đang sử dụng ngôn ngữ mặc định: <strong>{getLanguageName(defaultLanguage)}</strong>
+                  </p>
+                )}
                 {showCustomLanguageInput && (
-                  <input
-                    type="text"
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mt-2"
-                    placeholder="Nhập tên ngôn ngữ"
-                    required
-                  />
+                  <div>
+                    <input
+                      type="text"
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mt-2"
+                      placeholder="Nhập tên ngôn ngữ"
+                      required
+                    />
+                    {formData.language && (
+                      <p className="text-sm text-green-600 mt-1">
+                        Ngôn ngữ tùy chỉnh: <strong>{formData.language}</strong>
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -477,7 +646,7 @@ function VocabularyManager() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hình ảnh *
+                Hình ảnh (tùy chọn)
               </label>
               
               {/* Image Input Type Selection */}
@@ -513,7 +682,6 @@ function VocabularyManager() {
                 <div>
                   <input
                     type="url"
-                    required
                     value={formData.imageUrl}
                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -572,7 +740,6 @@ function VocabularyManager() {
                     accept="image/*"
                     onChange={handleImageFileChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    required
                   />
                   {imagePreview && (
                     <div className="mt-2">
@@ -650,10 +817,26 @@ function VocabularyManager() {
                 />
               )}
             </div>
+            
+            {/* Validation Messages */}
+            {formValidationErrors.length > 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium mb-2">Vui lòng điền đầy đủ thông tin bắt buộc:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {formValidationErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+            
             <div className="flex space-x-3">
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                disabled={!isFormValid}
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors disabled:opacity-50"
               >
                 Thêm từ vựng
               </button>
@@ -708,26 +891,37 @@ function VocabularyManager() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Ngôn ngữ cho file CSV *
               </label>
-              <select
-                value={csvLanguage || (showCustomLanguageInputCsv ? 'other' : 'english')}
-                onChange={(e) => handleCsvLanguageChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="english">Tiếng Anh</option>
-                <option value="korean">Tiếng Hàn</option>
-                <option value="japanese">Tiếng Nhật</option>
-                <option value="chinese">Tiếng Trung</option>
-                <option value="other">Khác...</option>
-              </select>
+              <LanguageDropdown
+                value={showCustomLanguageInputCsv ? 'other' : (csvLanguage || 'english')}
+                onChange={handleCsvLanguageChange}
+                className="w-full"
+              />
+              {!showCustomLanguageInputCsv && csvLanguage && (
+                <p className="text-sm text-blue-600 mt-1">
+                  Đã chọn: <strong>{getLanguageName(csvLanguage)}</strong>
+                </p>
+              )}
+              {defaultLanguage && csvLanguage === defaultLanguage && (
+                <p className="text-sm text-green-600 mt-1">
+                  Đang sử dụng ngôn ngữ mặc định: <strong>{getLanguageName(defaultLanguage)}</strong>
+                </p>
+              )}
               {showCustomLanguageInputCsv && (
-                <input
-                  type="text"
-                  value={csvLanguage}
-                  onChange={(e) => setCsvLanguage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mt-2"
-                  placeholder="Nhập tên ngôn ngữ"
-                  required
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={csvLanguage}
+                    onChange={(e) => setCsvLanguage(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mt-2"
+                    placeholder="Nhập tên ngôn ngữ"
+                    required
+                  />
+                  {csvLanguage && (
+                    <p className="text-sm text-green-600 mt-1">
+                      Ngôn ngữ tùy chỉnh: <strong>{csvLanguage}</strong>
+                    </p>
+                  )}
+                </div>
               )}
               <p className="text-sm text-gray-500 mt-1">
                 Tất cả từ vựng trong file CSV sẽ được gán vào ngôn ngữ này
@@ -736,7 +930,7 @@ function VocabularyManager() {
           </div>
           <button
             type="submit"
-            disabled={!csvFile || !csvTopic || !csvLanguage || uploading}
+            disabled={!csvFile || !csvTopic || (showCustomLanguageInputCsv ? !csvLanguage.trim() : !csvLanguage) || uploading}
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -750,14 +944,19 @@ function VocabularyManager() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Xem danh sách từ vựng</h2>
-            <p className="text-gray-600 mt-1">Xem từ vựng theo cấu trúc Languages → Titles → Words</p>
+            <p className="text-gray-600 mt-1">
+              <span className="hidden sm:inline">Xem từ vựng theo cấu trúc Languages → Titles → Words</span>
+              <span className="sm:hidden block">Languages → Titles → Words</span>
+            </p>
           </div>
-          <button
-            onClick={() => setShowList(!showList)}
-            className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-          >
-            <List className="h-4 w-4 mr-2" />
-            {showList ? 'Ẩn danh sách' : 'Xem danh sách'}
+                      <button
+              onClick={() => setShowList(!showList)}
+              className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+            >
+            <List className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">
+              {showList ? 'Ẩn danh sách' : 'Xem danh sách'}
+            </span>
           </button>
         </div>
       </div>
@@ -772,15 +971,21 @@ function VocabularyManager() {
                 <div className="flex items-center space-x-4">
                   <span className="flex items-center">
                     <Globe className="h-4 w-4 mr-1" />
-                    {totalLanguages} Languages
+                    <span className="hidden sm:inline mr-1">{totalLanguages}</span>
+                    <span className="sm:hidden">{totalLanguages}</span>
+                    <span className="hidden sm:inline">Languages</span>
                   </span>
                   <span className="flex items-center">
                     <FolderOpen className="h-4 w-4 mr-1" />
-                    {totalTitles} Titles
+                    <span className="hidden sm:inline mr-1">{totalTitles}</span>
+                    <span className="sm:hidden">{totalTitles}</span>
+                    <span className="hidden sm:inline">Titles</span>
                   </span>
                   <span className="flex items-center">
                     <FileText className="h-4 w-4 mr-1" />
-                    {totalWords} Words
+                    <span className="hidden sm:inline mr-1">{totalWords}</span>
+                    <span className="sm:hidden">{totalWords}</span>
+                    <span className="hidden sm:inline">Words</span>
                   </span>
                 </div>
               </div>
@@ -803,34 +1008,36 @@ function VocabularyManager() {
                 return (
                   <div key={language} className="bg-white">
                     {/* Language Header */}
-                    <div 
+                                        <div 
                       className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors"
                       onClick={() => toggleLanguage(language)}
                     >
-                      <div className="flex items-center space-x-3">
-                        <Globe className="h-6 w-6 text-blue-600" />
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <Globe className="h-6 w-6 text-blue-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate">
                             {getLanguageName(language)}
                           </h3>
                           <p className="text-sm text-gray-600">Language</p>
                         </div>
-                        <div className="flex space-x-2">
-                          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                            {languageTotalTitles} Titles
-                          </span>
-                          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                            {languageTotalWords} Words
-                          </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 flex-shrink-0 ml-4">
+                        <div className="flex items-center justify-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full w-16">
+                          <span className="font-semibold text-xs">{languageTotalTitles}</span>
+                          <span className="hidden sm:inline text-xs ml-1">Titles</span>
+                        </div>
+                        <div className="flex items-center justify-center px-2 py-1 bg-green-100 text-green-800 rounded-full w-16">
+                          <span className="font-semibold text-xs">{languageTotalWords}</span>
+                          <span className="hidden sm:inline text-xs ml-1">Words</span>
                         </div>
                       </div>
-                                        <div className="flex items-center space-x-2">
-                    {expandedLanguages[language] ? (
-                      <ChevronDown className="h-5 w-5 text-gray-500" />
-                    ) : (
-                      <ChevronRight className="h-5 w-5 text-gray-500" />
-                    )}
-                  </div>
+                      <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                        {expandedLanguages[language] ? (
+                          <ChevronDown className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 text-gray-500" />
+                        )}
+                      </div>
                     </div>
 
                     {/* Titles */}
@@ -850,15 +1057,18 @@ function VocabularyManager() {
                                   <p className="text-xs text-gray-500">Title</p>
                                 </div>
                                 <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                                  {topicVocabularies.length} Words
+                                  <span className="hidden sm:inline">{topicVocabularies.length} Words</span>
+                                  <span className="sm:hidden">{topicVocabularies.length}</span>
                                 </span>
                               </div>
 
-                              {expandedTopics[`${language}-${topic}`] ? (
-                                <ChevronDown className="h-4 w-4 text-gray-500" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-500" />
-                              )}
+                              <div>
+                                {expandedTopics[`${language}-${topic}`] ? (
+                                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-gray-500" />
+                                )}
+                              </div>
                             </div>
 
                             {/* Words List */}
@@ -952,6 +1162,95 @@ function VocabularyManager() {
               }}
               onClick={e => e.stopPropagation()}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Modal cài đặt ngôn ngữ mặc định */}
+      {showDefaultLanguageModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+          onClick={() => setShowDefaultLanguageModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 shadow-lg relative max-w-md w-full mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Cài đặt ngôn ngữ mặc định</h3>
+              <button
+                onClick={() => setShowDefaultLanguageModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">
+                Ngôn ngữ mặc định sẽ được tự động chọn khi vào trang quản lý từ vựng. Bạn vẫn có thể thay đổi sang ngôn ngữ khác.
+              </p>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ngôn ngữ hiện tại:
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    {defaultLanguage ? (
+                      <span className="text-blue-600 font-medium">
+                        {getLanguageName(defaultLanguage)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-500 italic">Chưa cài đặt</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Chọn ngôn ngữ mặc định:
+                  </label>
+                  <LanguageDropdown
+                    value={defaultLanguage || ''}
+                    onChange={(value) => {
+                      if (value === 'other') {
+                        // Xử lý ngôn ngữ tùy chỉnh
+                        const customLanguage = prompt('Nhập tên ngôn ngữ tùy chỉnh:');
+                        if (customLanguage && customLanguage.trim()) {
+                          setDefaultLanguageAPI(customLanguage.trim());
+                          setShowDefaultLanguageModal(false);
+                        }
+                      } else {
+                        setDefaultLanguageAPI(value);
+                        setShowDefaultLanguageModal(false);
+                      }
+                    }}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDefaultLanguageModal(false)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Hủy
+              </button>
+              {defaultLanguage && (
+                <button
+                  onClick={() => {
+                    setDefaultLanguageAPI('');
+                    setShowDefaultLanguageModal(false);
+                  }}
+                  className="px-4 py-2 text-red-600 bg-red-100 rounded-md hover:bg-red-200 transition-colors"
+                >
+                  Xóa mặc định
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

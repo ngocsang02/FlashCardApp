@@ -110,6 +110,15 @@ const vocabularySchema = new mongoose.Schema({
 
 const Vocabulary = mongoose.model('Vocabulary', vocabularySchema);
 
+// Settings Schema
+const settingsSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  value: { type: String, default: '' },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Settings = mongoose.model('Settings', settingsSchema);
+
 // Routes
 
 // Get all vocabulary
@@ -682,6 +691,40 @@ app.get('/api/vocabulary/:id', async (req, res) => {
     res.json(vocab);
   } catch (err) {
     res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// Settings routes
+app.get('/api/settings/default-language', async (req, res) => {
+  try {
+    const setting = await Settings.findOne({ key: 'defaultLanguage' });
+    res.json({ defaultLanguage: setting ? setting.value : '' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/api/settings/default-language', async (req, res) => {
+  try {
+    const { defaultLanguage } = req.body;
+    
+    // Upsert: tạo mới nếu chưa có, cập nhật nếu đã có
+    await Settings.findOneAndUpdate(
+      { key: 'defaultLanguage' },
+      { 
+        key: 'defaultLanguage',
+        value: defaultLanguage || '',
+        updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+    
+    res.json({ 
+      message: 'Cập nhật ngôn ngữ mặc định thành công',
+      defaultLanguage: defaultLanguage || ''
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

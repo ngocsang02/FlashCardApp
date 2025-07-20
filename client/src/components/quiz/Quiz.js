@@ -29,6 +29,18 @@ function Quiz() {
   const [customQuestionCount, setCustomQuestionCount] = useState('');
   const [questionError, setQuestionError] = useState('');
 
+  // Hàm chuyển đổi mã ngôn ngữ sang tên tiếng Việt
+  const getLanguageName = (code) => {
+    const languages = {
+      'english': 'Tiếng Anh',
+      'korean': 'Tiếng Hàn',
+      'japanese': 'Tiếng Nhật',
+      'chinese': 'Tiếng Trung'
+    };
+    // Nếu code không có trong danh sách cố định, trả về chính nó (ngôn ngữ tùy chỉnh)
+    return languages[code] || code;
+  };
+
   const navigate = useNavigate();
   const location = useLocation();
   const allowNavigateRef = useRef(false);
@@ -356,7 +368,7 @@ function Quiz() {
                     <option value="" disabled>Chọn ngôn ngữ</option>
                   )}
                   {languages.map(lang => (
-                    <option key={lang} value={lang}>{lang}</option>
+                    <option key={lang} value={lang}>{getLanguageName(lang)}</option>
                   ))}
                 </select>
               </div>

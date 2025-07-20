@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Globe, Folder, ChevronRight, ChevronDown, CheckCircle, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowLeft, Globe, Folder, ChevronRight, ChevronDown, CheckCircle, ArrowRight, BookOpen, AlertTriangle } from 'lucide-react';
 
 function VocabularyLearning() {
   const navigate = useNavigate();
@@ -16,6 +16,27 @@ function VocabularyLearning() {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  
+  // Thêm state cho số từ mới để học
+  const [vocabCount, setVocabCount] = useState(0);
+  
+  // Hàm chuyển đổi mã ngôn ngữ sang tên tiếng Việt
+  const getLanguageName = (code) => {
+    const languages = {
+      'english': 'Tiếng Anh',
+      'korean': 'Tiếng Hàn',
+      'japanese': 'Tiếng Nhật',
+      'chinese': 'Tiếng Trung'
+    };
+    // Nếu code không có trong danh sách cố định, trả về chính nó (ngôn ngữ tùy chỉnh)
+    return languages[code] || code;
+  };
+  const [filteredVocabCount, setFilteredVocabCount] = useState(0);
+  const [wordCountMode, setWordCountMode] = useState('preset'); // 'preset' | 'custom' | 'all'
+  const [customWordCount, setCustomWordCount] = useState('');
+  const [wordCount, setWordCount] = useState(10);
+  const [wordCountError, setWordCountError] = useState('');
 
   // Fetch languages
   useEffect(() => {
@@ -26,6 +47,7 @@ function VocabularyLearning() {
   useEffect(() => {
     if (selectedLanguage) {
       fetchTopics(selectedLanguage);
+      setSelectedTopic('all'); // Mặc định chọn "Tất cả chủ đề"
     } else {
       setTopics([]);
       setSelectedTopic('');
@@ -39,6 +61,62 @@ function VocabularyLearning() {
       setImageError(false);
     }
   }, [currentIndex, vocabularies]);
+
+  // Lấy số lượng từ vựng từ localStorage
+  useEffect(() => {
+    const cached = localStorage.getItem('vocabularies');
+    if (cached) {
+      try {
+        const arr = JSON.parse(cached);
+        setVocabCount(Array.isArray(arr) ? arr.length : 0);
+      } catch {
+        setVocabCount(0);
+      }
+    } else {
+      setVocabCount(0);
+    }
+  }, []);
+
+  // Hàm filter vocabularies theo ngôn ngữ/chủ đề
+  useEffect(() => {
+    if (!selectedLanguage) {
+      setFilteredVocabCount(0);
+      return;
+    }
+    const cached = localStorage.getItem('vocabularies');
+    if (cached) {
+      try {
+        const arr = JSON.parse(cached);
+        const filtered = arr.filter(v => v.language === selectedLanguage && (selectedTopic === 'all' || v.topic === selectedTopic));
+        setFilteredVocabCount(filtered.length);
+      } catch {
+        setFilteredVocabCount(0);
+      }
+    } else {
+      setFilteredVocabCount(0);
+    }
+  }, [selectedLanguage, selectedTopic]);
+
+  // Đóng dropdown khi click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const languageDropdown = document.querySelector('[data-dropdown="language"]');
+      const topicDropdown = document.querySelector('[data-dropdown="topic"]');
+      
+      if (showLanguageDropdown && languageDropdown && !languageDropdown.contains(event.target)) {
+        setShowLanguageDropdown(false);
+      }
+      
+      if (showTopicDropdown && topicDropdown && !topicDropdown.contains(event.target)) {
+        setShowTopicDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showLanguageDropdown, showTopicDropdown]);
 
   const fetchLanguages = async () => {
     try {
@@ -74,7 +152,14 @@ function VocabularyLearning() {
             v.language === selectedLanguage && 
             (selectedTopic === 'all' || v.topic === selectedTopic)
           );
-          setVocabularies(filtered);
+          
+          // Giới hạn số từ theo lựa chọn của người dùng
+          let limitedVocabularies = filtered;
+          if (wordCountMode === 'preset' || wordCountMode === 'custom') {
+            limitedVocabularies = filtered.slice(0, wordCount);
+          }
+          
+          setVocabularies(limitedVocabularies);
           setCurrentIndex(0);
           setIsLearning(true);
         } catch (error) {
@@ -119,6 +204,19 @@ function VocabularyLearning() {
     setVocabularies([]);
   };
 
+  const handleExitLearning = () => {
+    setShowExitConfirm(true);
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
+    resetLearning();
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
+  };
+
   // Helper function to get image URL
   const getImageUrl = (vocabulary) => {
     const imageUrl = vocabulary.image || vocabulary.imageUrl;
@@ -151,7 +249,7 @@ function VocabularyLearning() {
         {/* Back button - original position */}
         <div className="px-4 sm:px-6 lg:px-8 pt-4">
           <button
-            onClick={resetLearning}
+            onClick={handleExitLearning}
             className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -168,7 +266,7 @@ function VocabularyLearning() {
                   Học từ vựng
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-500">
-                  {selectedLanguage} - {selectedTopic}
+                  {getLanguageName(selectedLanguage)} - {selectedTopic === 'all' ? 'Tất cả chủ đề' : selectedTopic} ({vocabularies.length} từ)
                 </p>
               </div>
             </div>
@@ -314,6 +412,39 @@ function VocabularyLearning() {
             </div>
           </div>
         </div>
+
+        {/* Exit Confirmation Popup */}
+        {showExitConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <AlertTriangle className="h-6 w-6 text-yellow-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Xác nhận thoát
+                  </h3>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  Bạn có chắc chắn muốn thoát khỏi quá trình học từ vựng? Tiến độ hiện tại sẽ không được lưu.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelExit}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md font-medium transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={confirmExit}
+                    className="flex-1 px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md font-medium transition-colors"
+                  >
+                    Thoát
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -340,6 +471,11 @@ function VocabularyLearning() {
         </h1>
         <span className="text-base text-gray-500 font-medium mb-4">Chọn ngôn ngữ và chủ đề để bắt đầu học</span>
         <div className="w-24 h-1 rounded-full bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 mb-2" />
+        {selectedLanguage && (selectedTopic === 'all' || selectedTopic) && filteredVocabCount > 0 && (
+          <div className="text-sm text-blue-600 font-medium">
+            Có {filteredVocabCount} từ vựng có sẵn
+          </div>
+        )}
       </div>
 
       {/* Selection Form */}
@@ -352,13 +488,19 @@ function VocabularyLearning() {
                 <Globe className="h-4 w-4 inline mr-2" />
                 Ngôn ngữ
               </label>
-              <div className="relative">
+              <div className="relative" data-dropdown="language">
                 <button
-                  onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                  onClick={() => {
+                    setShowLanguageDropdown(!showLanguageDropdown);
+                    // Đóng dropdown khác khi mở dropdown này
+                    if (!showLanguageDropdown) {
+                      setShowTopicDropdown(false);
+                    }
+                  }}
                   className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <span className={selectedLanguage ? 'text-gray-900' : 'text-gray-500'}>
-                    {selectedLanguage || 'Chọn ngôn ngữ'}
+                    {selectedLanguage ? getLanguageName(selectedLanguage) : 'Chọn ngôn ngữ'}
                   </span>
                   {showLanguageDropdown ? (
                     <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -368,17 +510,18 @@ function VocabularyLearning() {
                 </button>
                 
                 {showLanguageDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-60 overflow-auto">
                     {languages.map((language) => (
                       <button
                         key={language}
                         onClick={() => {
                           setSelectedLanguage(language);
                           setShowLanguageDropdown(false);
+                          setShowTopicDropdown(false); // Đóng topic dropdown khi chọn ngôn ngữ mới
                         }}
                         className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100"
                       >
-                        {language}
+                        {getLanguageName(language)}
                       </button>
                     ))}
                   </div>
@@ -392,9 +535,15 @@ function VocabularyLearning() {
                 <Folder className="h-4 w-4 inline mr-2" />
                 Chủ đề
               </label>
-              <div className="relative">
+              <div className="relative" data-dropdown="topic">
                 <button
-                  onClick={() => setShowTopicDropdown(!showTopicDropdown)}
+                  onClick={() => {
+                    setShowTopicDropdown(!showTopicDropdown);
+                    // Đóng dropdown khác khi mở dropdown này
+                    if (!showTopicDropdown) {
+                      setShowLanguageDropdown(false);
+                    }
+                  }}
                   disabled={!selectedLanguage}
                   className={`w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     selectedLanguage
@@ -403,7 +552,7 @@ function VocabularyLearning() {
                   }`}
                 >
                   <span className={selectedTopic ? 'text-gray-900' : 'text-gray-500'}>
-                    {selectedTopic || (selectedLanguage ? 'Chọn chủ đề' : 'Không có chủ đề')}
+                    {selectedTopic === 'all' ? 'Tất cả chủ đề' : selectedTopic || (selectedLanguage ? 'Chọn chủ đề' : 'Không có chủ đề')}
                   </span>
                   {showTopicDropdown ? (
                     <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -413,20 +562,31 @@ function VocabularyLearning() {
                 </button>
                 
                 {showTopicDropdown && selectedLanguage && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-30 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-60 overflow-auto">
                     {topics.length > 0 ? (
-                      topics.map((topic) => (
+                      <>
                         <button
-                          key={topic}
                           onClick={() => {
-                            setSelectedTopic(topic);
+                            setSelectedTopic('all');
                             setShowTopicDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100"
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 font-medium"
                         >
-                          {topic}
+                          Tất cả chủ đề
                         </button>
-                      ))
+                        {topics.map((topic) => (
+                          <button
+                            key={topic}
+                            onClick={() => {
+                              setSelectedTopic(topic);
+                              setShowTopicDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100"
+                          >
+                            {topic}
+                          </button>
+                        ))}
+                      </>
                     ) : (
                       <div className="px-4 py-2 text-gray-500">Không có chủ đề nào</div>
                     )}
@@ -435,13 +595,96 @@ function VocabularyLearning() {
               </div>
             </div>
 
+            {/* Word Count Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <BookOpen className="h-4 w-4 inline mr-2" />
+                Số từ mới để học
+              </label>
+              {wordCountMode === 'custom' ? (
+                <>
+                  <input
+                    type="number"
+                    value={customWordCount}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCustomWordCount(val);
+                      if (val === '') {
+                        setWordCountError('Vui lòng nhập số từ');
+                        setWordCount('');
+                        return;
+                      }
+                      const num = Number(val);
+                      if (isNaN(num) || num < 1) {
+                        setWordCountError('Số từ phải lớn hơn 0');
+                        setWordCount('');
+                      } else if (num > filteredVocabCount) {
+                        setWordCountError(`Tối đa ${filteredVocabCount} từ`);
+                        setWordCount('');
+                      } else {
+                        setWordCountError('');
+                        setWordCount(num);
+                      }
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={`Nhập số từ (1-${filteredVocabCount})`}
+                    disabled={!selectedLanguage || filteredVocabCount === 0}
+                  />
+                  {wordCountError && (
+                    <div className="text-red-500 text-sm mt-1">{wordCountError}</div>
+                  )}
+                </>
+              ) : (
+                <select
+                  value={wordCountMode === 'custom' ? 'custom' : (wordCountMode === 'all' ? 'all' : wordCount)}
+                  onChange={e => {
+                    if (e.target.value === 'custom') {
+                      setWordCountMode('custom');
+                      setCustomWordCount('');
+                      setWordCount('');
+                      setWordCountError('');
+                    } else if (e.target.value === 'all') {
+                      setWordCountMode('all');
+                      setWordCount(filteredVocabCount);
+                      setWordCountError('');
+                    } else {
+                      setWordCountMode('preset');
+                      setWordCount(Number(e.target.value));
+                      setWordCountError('');
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                  disabled={!selectedLanguage || filteredVocabCount === 0}
+                >
+                  {!selectedLanguage || filteredVocabCount === 0 ? (
+                    <option value={0}>0 từ</option>
+                  ) : (
+                    <>
+                      {filteredVocabCount >= 5 && <option value={5}>5 từ</option>}
+                      {filteredVocabCount >= 10 && <option value={10}>10 từ</option>}
+                      {filteredVocabCount >= 20 && <option value={20}>20 từ</option>}
+                      {filteredVocabCount >= 30 && <option value={30}>30 từ</option>}
+                      {filteredVocabCount >= 50 && <option value={50}>50 từ</option>}
+                      {filteredVocabCount >= 100 && <option value={100}>100 từ</option>}
+                      {filteredVocabCount >= 200 && <option value={200}>200 từ</option>}
+                      {filteredVocabCount >= 300 && <option value={300}>300 từ</option>}
+                      {filteredVocabCount >= 500 && <option value={500}>500 từ</option>}
+                      {filteredVocabCount >= 1000 && <option value={1000}>1000 từ</option>}
+                      <option value="all">Toàn bộ ({filteredVocabCount} từ)</option>
+                      <option value="custom">Khác...</option>
+                    </>
+                  )}
+                </select>
+              )}
+            </div>
+
             {/* Start Button */}
             <div className="pt-4">
               <button
                 onClick={fetchVocabularies}
-                disabled={!selectedLanguage || !selectedTopic || loading}
+                disabled={!selectedLanguage || (selectedTopic !== 'all' && !selectedTopic) || loading || filteredVocabCount === 0 || (wordCountMode === 'custom' && wordCountError)}
                 className={`w-full flex items-center justify-center px-6 py-3 rounded-md font-medium transition-colors ${
-                  selectedLanguage && selectedTopic && !loading
+                  selectedLanguage && (selectedTopic === 'all' || selectedTopic) && !loading && filteredVocabCount > 0 && !(wordCountMode === 'custom' && wordCountError)
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
@@ -458,6 +701,11 @@ function VocabularyLearning() {
                   </>
                 )}
               </button>
+              {filteredVocabCount === 0 && selectedLanguage && (selectedTopic === 'all' || selectedTopic) && (
+                <div className="text-red-500 text-sm mt-2 text-center">
+                  Không có từ vựng nào cho ngôn ngữ và chủ đề đã chọn.
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -11,6 +11,8 @@ function EditLanguage() {
   const [newLanguage, setNewLanguage] = useState(language);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showCustomLanguageInput, setShowCustomLanguageInput] = useState(false);
+  const [customLanguage, setCustomLanguage] = useState('');
   const from = ""; // Nếu cần lấy từ router, hãy thay thế bằng giá trị phù hợp
 
   useEffect(() => {
@@ -38,9 +40,26 @@ function EditLanguage() {
     return languages[code] || code;
   };
 
+  const handleLanguageChange = (value) => {
+    if (value === 'other') {
+      setShowCustomLanguageInput(true);
+      setNewLanguage('');
+    } else {
+      setShowCustomLanguageInput(false);
+      setNewLanguage(value);
+    }
+  };
+
   const handleSave = async () => {
-    if (newLanguage === language) {
+    const finalLanguage = showCustomLanguageInput ? customLanguage : newLanguage;
+    
+    if (finalLanguage === language) {
       window.showToast('Không có thay đổi nào', 'info');
+      return;
+    }
+
+    if (showCustomLanguageInput && !customLanguage.trim()) {
+      window.showToast('Vui lòng nhập tên ngôn ngữ tùy chỉnh', 'warning');
       return;
     }
 
@@ -50,7 +69,7 @@ function EditLanguage() {
       const updatePromises = vocabularies.map(vocab => 
         axios.put(`/api/vocabulary/${vocab._id}`, {
           ...vocab,
-          language: newLanguage
+          language: finalLanguage
         })
       );
       
@@ -158,21 +177,51 @@ function EditLanguage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Thay đổi thành ngôn ngữ
             </label>
-            <select
-              value={newLanguage}
-              onChange={(e) => setNewLanguage(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="english">Tiếng Anh</option>
-              <option value="korean">Tiếng Hàn</option>
-              <option value="japanese">Tiếng Nhật</option>
-              <option value="chinese">Tiếng Trung</option>
-            </select>
+            <div className="relative">
+              <select
+                value={showCustomLanguageInput ? 'other' : (newLanguage || 'english')}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none bg-white"
+              >
+                              <option value="english">Tiếng Anh</option>
+                <option value="korean">Tiếng Hàn</option>
+                <option value="japanese">Tiếng Nhật</option>
+                <option value="chinese">Tiếng Trung</option>
+                <option value="other">Khác...</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+                          </div>
+              {!showCustomLanguageInput && newLanguage && (
+                <p className="text-sm text-blue-600 mt-1">
+                  Đã chọn: <strong>{getLanguageName(newLanguage)}</strong>
+                </p>
+              )}
+              {showCustomLanguageInput && (
+              <div>
+                <input
+                  type="text"
+                  value={customLanguage}
+                  onChange={(e) => setCustomLanguage(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mt-2"
+                  placeholder="Nhập tên ngôn ngữ"
+                  required
+                />
+                {customLanguage && (
+                  <p className="text-sm text-green-600 mt-1">
+                    Ngôn ngữ tùy chỉnh: <strong>{customLanguage}</strong>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex space-x-3 pt-4">
             <button
               onClick={handleSave}
-              disabled={saving || newLanguage === language}
+              disabled={saving || (showCustomLanguageInput ? customLanguage === language : newLanguage === language) || (showCustomLanguageInput && !customLanguage.trim())}
               className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors disabled:opacity-50"
             >
               <Save className="h-4 w-4 mr-2" />
