@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../axiosConfig';
 import { ChevronRight, ChevronDown, BookOpen, FolderOpen, Globe, FileText, Trash2, MoreVertical, Edit } from 'lucide-react';
 import DropdownMenu from '../util/DropdownMenu';
+import { debugLog, errorLog } from '../../config/environment';
 
 function VocabularyList() {
   const [vocabularies, setVocabularies] = useState([]);
@@ -16,10 +17,12 @@ function VocabularyList() {
 
   const fetchVocabularies = async () => {
     try {
+      debugLog('Fetching vocabularies for list...');
       const response = await axios.get('/api/vocabulary');
       setVocabularies(response.data);
+      debugLog('Vocabularies loaded for list:', response.data.length);
     } catch (error) {
-      console.error('Error fetching vocabularies:', error);
+      errorLog('Error fetching vocabularies:', error);
     } finally {
       setLoading(false);
     }
@@ -248,21 +251,23 @@ function VocabularyList() {
                               {topicVocabularies.length} Words
                             </span>
                           </div>
-                                                        <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteTopic(language, topic);
-                                }}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                title={`Xóa tất cả từ vựng trong chủ đề "${topic}"`}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                              {expandedTopics[`${language}-${topic}`] ? (
-                                <ChevronDown className="h-4 w-4 text-gray-500" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-500" />
-                              )}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTopic(language, topic);
+                              }}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              title={`Xóa tất cả từ vựng trong chủ đề "${topic}"`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                            {expandedTopics[`${language}-${topic}`] ? (
+                              <ChevronDown className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-gray-500" />
+                            )}
+                          </div>
                         </div>
 
                         {/* Words List */}

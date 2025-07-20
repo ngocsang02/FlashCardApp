@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import axios from '../../axiosConfig';
 import { Play, RotateCcw, CheckCircle, XCircle, ArrowLeft, LogOut } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { debugLog, errorLog } from '../../config/environment';
 
 function Quiz() {
   const [questions, setQuestions] = useState([]);

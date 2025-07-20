@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Globe, Folder, ChevronRight, ChevronDown, CheckCircle, ArrowRight, BookOpen, AlertTriangle } from 'lucide-react';
+import config, { debugLog, errorLog, isDevelopment } from '../../config/environment';
 
 function VocabularyLearning() {
   const navigate = useNavigate();
@@ -17,6 +18,9 @@ function VocabularyLearning() {
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [topicsLoading, setTopicsLoading] = useState(false);
   
   // Thêm state cho số từ mới để học
   const [vocabCount, setVocabCount] = useState(0);
@@ -62,19 +66,39 @@ function VocabularyLearning() {
     }
   }, [currentIndex, vocabularies]);
 
-  // Lấy số lượng từ vựng từ localStorage
+  // Lấy số lượng từ vựng từ API hoặc localStorage
   useEffect(() => {
-    const cached = localStorage.getItem('vocabularies');
-    if (cached) {
+    const fetchVocabCount = async () => {
       try {
-        const arr = JSON.parse(cached);
-        setVocabCount(Array.isArray(arr) ? arr.length : 0);
-      } catch {
-        setVocabCount(0);
+        debugLog('Fetching vocabularies count from API...');
+        const response = await fetch(`${config.apiUrl}/api/vocabulary`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setVocabCount(data.length);
+        // Cập nhật localStorage để cache
+        localStorage.setItem(config.storageKeys.vocabularies, JSON.stringify(data));
+        debugLog('Vocabularies count updated:', data.length);
+      } catch (error) {
+        errorLog('Error fetching vocabularies for count:', error);
+        // Fallback to localStorage
+        const cached = localStorage.getItem(config.storageKeys.vocabularies);
+        if (cached) {
+          try {
+            const arr = JSON.parse(cached);
+            setVocabCount(Array.isArray(arr) ? arr.length : 0);
+            debugLog('Using cached vocabularies count:', arr.length);
+          } catch {
+            setVocabCount(0);
+          }
+        } else {
+          setVocabCount(0);
+        }
       }
-    } else {
-      setVocabCount(0);
-    }
+    };
+    
+    fetchVocabCount();
   }, []);
 
   // Hàm filter vocabularies theo ngôn ngữ/chủ đề
@@ -83,18 +107,42 @@ function VocabularyLearning() {
       setFilteredVocabCount(0);
       return;
     }
-    const cached = localStorage.getItem('vocabularies');
-    if (cached) {
+    
+    const fetchFilteredCount = async () => {
       try {
-        const arr = JSON.parse(cached);
-        const filtered = arr.filter(v => v.language === selectedLanguage && (selectedTopic === 'all' || v.topic === selectedTopic));
-        setFilteredVocabCount(filtered.length);
-      } catch {
-        setFilteredVocabCount(0);
+        // Khi selectedTopic là 'all', không gửi topic parameter để lấy tất cả chủ đề
+        const apiUrl = selectedTopic === 'all' 
+          ? `${config.apiUrl}/api/vocabulary?language=${encodeURIComponent(selectedLanguage)}`
+          : `${config.apiUrl}/api/vocabulary?language=${encodeURIComponent(selectedLanguage)}&topic=${encodeURIComponent(selectedTopic)}`;
+        
+        debugLog('Fetching filtered vocabularies:', apiUrl);
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setFilteredVocabCount(data.length);
+        debugLog('Filtered vocabularies count:', data.length);
+      } catch (error) {
+        errorLog('Error fetching filtered vocabularies:', error);
+        // Fallback to localStorage
+        const cached = localStorage.getItem(config.storageKeys.vocabularies);
+        if (cached) {
+          try {
+            const arr = JSON.parse(cached);
+            const filtered = arr.filter(v => v.language === selectedLanguage && (selectedTopic === 'all' || v.topic === selectedTopic));
+            setFilteredVocabCount(filtered.length);
+            debugLog('Using cached filtered vocabularies count:', filtered.length);
+          } catch {
+            setFilteredVocabCount(0);
+          }
+        } else {
+          setFilteredVocabCount(0);
+        }
       }
-    } else {
-      setFilteredVocabCount(0);
-    }
+    };
+    
+    fetchFilteredCount();
   }, [selectedLanguage, selectedTopic]);
 
   // Đóng dropdown khi click outside
@@ -119,22 +167,41 @@ function VocabularyLearning() {
   }, [showLanguageDropdown, showTopicDropdown]);
 
   const fetchLanguages = async () => {
+    setLanguagesLoading(true);
+    setError('');
     try {
-      const response = await fetch('/api/languages');
+      debugLog('Fetching languages from API...');
+      const response = await fetch(`${config.apiUrl}/api/languages`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setLanguages(data);
+      debugLog('Languages loaded:', data);
     } catch (error) {
-      console.error('Error fetching languages:', error);
+      errorLog('Error fetching languages:', error);
+      setError('Không thể tải danh sách ngôn ngữ. Vui lòng thử lại.');
+    } finally {
+      setLanguagesLoading(false);
     }
   };
 
   const fetchTopics = async (language) => {
+    setTopicsLoading(true);
     try {
-      const response = await fetch(`/api/topics/${encodeURIComponent(language)}`);
+      debugLog('Fetching topics for language:', language);
+      const response = await fetch(`${config.apiUrl}/api/topics/${encodeURIComponent(language)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setTopics(data);
+      debugLog('Topics loaded for', language, ':', data);
     } catch (error) {
-      console.error('Error fetching topics:', error);
+      errorLog('Error fetching topics:', error);
+      setTopics([]);
+    } finally {
+      setTopicsLoading(false);
     }
   };
 
@@ -143,42 +210,67 @@ function VocabularyLearning() {
     
     setLoading(true);
     try {
-      // Lấy từ localStorage như Quiz component
-      const cached = localStorage.getItem('vocabularies');
-      if (cached) {
-        try {
-          const arr = JSON.parse(cached);
-          const filtered = arr.filter(v => 
-            v.language === selectedLanguage && 
-            (selectedTopic === 'all' || v.topic === selectedTopic)
-          );
-          
-          // Giới hạn số từ theo lựa chọn của người dùng
-          let limitedVocabularies = filtered;
-          if (wordCountMode === 'preset' || wordCountMode === 'custom') {
-            limitedVocabularies = filtered.slice(0, wordCount);
-          }
-          
-          setVocabularies(limitedVocabularies);
-          setCurrentIndex(0);
-          setIsLearning(true);
-        } catch (error) {
-          console.error('Error parsing cached vocabularies:', error);
-          // Fallback to API
-          const response = await fetch(`/api/vocabulary?language=${encodeURIComponent(selectedLanguage)}&topic=${encodeURIComponent(selectedTopic)}`);
-          const data = await response.json();
-          setVocabularies(data);
-          setCurrentIndex(0);
-          setIsLearning(true);
+      // Ưu tiên lấy từ API trước, sau đó fallback về localStorage
+      let vocabularies = [];
+      
+      try {
+        // Lấy từ API với filter theo ngôn ngữ và chủ đề
+        const apiUrl = selectedTopic === 'all' 
+          ? `${config.apiUrl}/api/vocabulary?language=${encodeURIComponent(selectedLanguage)}`
+          : `${config.apiUrl}/api/vocabulary?language=${encodeURIComponent(selectedLanguage)}&topic=${encodeURIComponent(selectedTopic)}`;
+        
+        debugLog('Fetching vocabularies for learning:', apiUrl);
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      } else {
-        // Fallback to API if no cache
-        const response = await fetch(`/api/vocabulary?language=${encodeURIComponent(selectedLanguage)}&topic=${encodeURIComponent(selectedTopic)}`);
         const data = await response.json();
-        setVocabularies(data);
-        setCurrentIndex(0);
-        setIsLearning(true);
+        vocabularies = data;
+        debugLog('Vocabularies loaded for learning:', vocabularies.length);
+        
+        // Cập nhật localStorage để cache
+        const allVocabularies = localStorage.getItem(config.storageKeys.vocabularies);
+        if (allVocabularies) {
+          try {
+            const cached = JSON.parse(allVocabularies);
+            const updated = cached.filter(v => 
+              !(v.language === selectedLanguage && (selectedTopic === 'all' || v.topic === selectedTopic))
+            );
+            localStorage.setItem(config.storageKeys.vocabularies, JSON.stringify([...updated, ...vocabularies]));
+            debugLog('Updated localStorage cache');
+          } catch (error) {
+            errorLog('Error updating localStorage:', error);
+          }
+        }
+      } catch (apiError) {
+        errorLog('Error fetching from API, falling back to localStorage:', apiError);
+        
+        // Fallback to localStorage
+        const cached = localStorage.getItem(config.storageKeys.vocabularies);
+        if (cached) {
+          try {
+            const arr = JSON.parse(cached);
+            vocabularies = arr.filter(v => 
+              v.language === selectedLanguage && 
+              (selectedTopic === 'all' || v.topic === selectedTopic)
+            );
+            debugLog('Using cached vocabularies for learning:', vocabularies.length);
+          } catch (error) {
+            errorLog('Error parsing cached vocabularies:', error);
+            vocabularies = [];
+          }
+        }
       }
+      
+      // Giới hạn số từ theo lựa chọn của người dùng
+      let limitedVocabularies = vocabularies;
+      if (wordCountMode === 'preset' || wordCountMode === 'custom') {
+        limitedVocabularies = vocabularies.slice(0, wordCount);
+      }
+      
+      setVocabularies(limitedVocabularies);
+      setCurrentIndex(0);
+      setIsLearning(true);
     } catch (error) {
       console.error('Error fetching vocabularies:', error);
     } finally {
@@ -497,36 +589,50 @@ function VocabularyLearning() {
                       setShowTopicDropdown(false);
                     }
                   }}
-                  className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={languagesLoading}
+                  className={`w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    languagesLoading 
+                      ? 'bg-gray-100 cursor-not-allowed' 
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
                 >
                   <span className={selectedLanguage ? 'text-gray-900' : 'text-gray-500'}>
-                    {selectedLanguage ? getLanguageName(selectedLanguage) : 'Chọn ngôn ngữ'}
+                    {languagesLoading ? 'Đang tải...' : (selectedLanguage ? getLanguageName(selectedLanguage) : 'Chọn ngôn ngữ')}
                   </span>
-                  {showLanguageDropdown ? (
+                  {languagesLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  ) : showLanguageDropdown ? (
                     <ChevronDown className="h-4 w-4 text-gray-400" />
                   ) : (
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   )}
                 </button>
                 
-                {showLanguageDropdown && (
+                {showLanguageDropdown && !languagesLoading && (
                   <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-60 overflow-auto">
-                    {languages.map((language) => (
-                      <button
-                        key={language}
-                        onClick={() => {
-                          setSelectedLanguage(language);
-                          setShowLanguageDropdown(false);
-                          setShowTopicDropdown(false); // Đóng topic dropdown khi chọn ngôn ngữ mới
-                        }}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100"
-                      >
-                        {getLanguageName(language)}
-                      </button>
-                    ))}
+                    {languages.length > 0 ? (
+                      languages.map((language) => (
+                        <button
+                          key={language}
+                          onClick={() => {
+                            setSelectedLanguage(language);
+                            setShowLanguageDropdown(false);
+                            setShowTopicDropdown(false); // Đóng topic dropdown khi chọn ngôn ngữ mới
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100"
+                        >
+                          {getLanguageName(language)}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-gray-500">Không có ngôn ngữ nào</div>
+                    )}
                   </div>
                 )}
               </div>
+              {error && (
+                <div className="text-red-500 text-sm mt-1">{error}</div>
+              )}
             </div>
 
             {/* Topic Selection */}
@@ -544,24 +650,26 @@ function VocabularyLearning() {
                       setShowLanguageDropdown(false);
                     }
                   }}
-                  disabled={!selectedLanguage}
+                  disabled={!selectedLanguage || topicsLoading}
                   className={`w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    selectedLanguage
+                    selectedLanguage && !topicsLoading
                       ? 'bg-white hover:bg-gray-50'
                       : 'bg-gray-100 cursor-not-allowed'
                   }`}
                 >
                   <span className={selectedTopic ? 'text-gray-900' : 'text-gray-500'}>
-                    {selectedTopic === 'all' ? 'Tất cả chủ đề' : selectedTopic || (selectedLanguage ? 'Chọn chủ đề' : 'Không có chủ đề')}
+                    {topicsLoading ? 'Đang tải...' : (selectedTopic === 'all' ? 'Tất cả chủ đề' : selectedTopic || (selectedLanguage ? 'Chọn chủ đề' : 'Không có chủ đề'))}
                   </span>
-                  {showTopicDropdown ? (
+                  {topicsLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  ) : showTopicDropdown ? (
                     <ChevronDown className="h-4 w-4 text-gray-400" />
                   ) : (
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   )}
                 </button>
                 
-                {showTopicDropdown && selectedLanguage && (
+                {showTopicDropdown && selectedLanguage && !topicsLoading && (
                   <div className="absolute z-30 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-60 overflow-auto">
                     {topics.length > 0 ? (
                       <>

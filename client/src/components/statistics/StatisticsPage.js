@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../axiosConfig';
 import QuestionTypeLineChart from './QuestionTypeLineChart';
 import QuestionTypeBarChart from './QuestionTypeBarChart';
 import LanguageLineChart from './LanguageLineChart';
 import LanguageBarChart from './LanguageBarChart';
 import { Listbox } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { debugLog, errorLog } from '../../config/environment';
 
 function StatisticsPage() {
   const navigate = useNavigate();

@@ -6,17 +6,17 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-require('dotenv').config();
+const { config, isDevelopment, isLocalhost, debugLog, errorLog, infoLog } = require('./config/environment');
 
 // Cấu hình Cloudinary
 cloudinary.config({
-  cloud_name: 'dgln3kmbt',
-  api_key: '123256545382126',
-  api_secret: '3dRan57a2FrSUIcnoiBxkGQso5I'
+  cloud_name: config.cloudinary.cloudName,
+  api_key: config.cloudinary.apiKey,
+  api_secret: config.cloudinary.apiSecret
 });
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 // Multer configuration
 const storage = multer.diskStorage({
@@ -70,32 +70,30 @@ const imageUpload = multer({
 const memoryUpload = multer({ storage: multer.memoryStorage() });
 
 // Middleware
-app.use(cors());
+app.use(cors(config.cors));
 app.use(express.json());
 app.use(express.static('public'));
 
 // MongoDB Connection
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/flashcard-app';
-const isLocal = mongoUri.includes('localhost') || mongoUri.includes('127.0.0.1');
-
-mongoose.connect(mongoUri, {
+mongoose.connect(config.mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
 db.on('error', (error) => {
-  console.error('❌ MongoDB connection error:', error);
-  if (isLocal) {
-    console.log('💡 Local MongoDB không kết nối được. Hãy đảm bảo:');
-    console.log('   1. MongoDB đã được cài đặt');
-    console.log('   2. MongoDB service đang chạy: net start MongoDB');
-    console.log('   3. Hoặc chạy thủ công: mongod');
+  errorLog('❌ MongoDB connection error:', error);
+  if (isLocalhost()) {
+    infoLog('💡 Local MongoDB không kết nối được. Hãy đảm bảo:');
+    infoLog('   1. MongoDB đã được cài đặt');
+    infoLog('   2. MongoDB service đang chạy: net start MongoDB');
+    infoLog('   3. Hoặc chạy thủ công: mongod');
   }
 });
 db.once('open', () => {
-  console.log(`✅ Connected to MongoDB: ${isLocal ? 'LOCAL' : 'ATLAS'}`);
-  console.log(`📊 Database: ${mongoUri.split('/').pop().split('?')[0]}`);
+  infoLog(`✅ Connected to MongoDB: ${isLocalhost() ? 'LOCAL' : 'ATLAS'}`);
+  infoLog(`📊 Database: ${config.mongoUri.split('/').pop().split('?')[0]}`);
+  debugLog(`🔗 MongoDB URI: ${config.mongoUri}`);
 });
 
 // Vocabulary Schema
@@ -729,5 +727,10 @@ app.post('/api/settings/default-language', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  infoLog(`🚀 Server is running on port ${PORT}`);
+  infoLog(`🌍 Environment: ${config.nodeEnv.toUpperCase()}`);
+  infoLog(`🔗 API URL: http://localhost:${PORT}`);
+  if (isDevelopment()) {
+    debugLog('🔧 Development mode enabled');
+  }
 }); 

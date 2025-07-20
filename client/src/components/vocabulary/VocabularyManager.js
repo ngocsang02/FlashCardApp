@@ -3,6 +3,7 @@ import axios from '../../axiosConfig';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Upload, Trash2, Eye, EyeOff, List, ChevronRight, ChevronDown, Globe, FolderOpen, FileText, ArrowLeft, BookOpen, MoreVertical, Edit, X } from 'lucide-react';
 import DropdownMenu from '../util/DropdownMenu';
+import config, { debugLog, errorLog } from '../../config/environment';
 
 // Component dropdown tùy chỉnh cho ngôn ngữ
 const LanguageDropdown = ({ value, onChange, className = '' }) => {
@@ -122,11 +123,13 @@ function VocabularyManager() {
   const fetchVocabularies = async () => {
     setLoading(true);
     try {
+      debugLog('Fetching vocabularies from server...');
       const response = await axios.get('/api/vocabulary');
       setVocabularies(response.data);
-      localStorage.setItem('vocabularies', JSON.stringify(response.data));
+      localStorage.setItem(config.storageKeys.vocabularies, JSON.stringify(response.data));
+      debugLog('Vocabularies updated:', response.data.length);
     } catch (error) {
-      console.error('Error fetching vocabularies:', error);
+      errorLog('Error fetching vocabularies:', error);
     } finally {
       setLoading(false);
     }
