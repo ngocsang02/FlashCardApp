@@ -75,15 +75,27 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/flashcard-app', {
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/flashcard-app';
+const isLocal = mongoUri.includes('localhost') || mongoUri.includes('127.0.0.1');
+
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.on('error', (error) => {
+  console.error('❌ MongoDB connection error:', error);
+  if (isLocal) {
+    console.log('💡 Local MongoDB không kết nối được. Hãy đảm bảo:');
+    console.log('   1. MongoDB đã được cài đặt');
+    console.log('   2. MongoDB service đang chạy: net start MongoDB');
+    console.log('   3. Hoặc chạy thủ công: mongod');
+  }
+});
 db.once('open', () => {
-  console.log('Connected to MongoDB');
+  console.log(`✅ Connected to MongoDB: ${isLocal ? 'LOCAL' : 'ATLAS'}`);
+  console.log(`📊 Database: ${mongoUri.split('/').pop().split('?')[0]}`);
 });
 
 // Vocabulary Schema

@@ -96,3 +96,5 @@ temp/
 ehthumbs.db
 Thumbs.db 
 doc
+server/env.atlas
+server/env.local

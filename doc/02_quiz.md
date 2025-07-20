@@ -56,9 +56,20 @@ Tính năng này cho phép người dùng luyện tập từ vựng thông qua c
 - **Hàm:** `resetQuiz()`
   - Reset toàn bộ state về ban đầu để người dùng có thể làm lại bài mới.
 
+### 7. Bảo vệ thoát bài kiểm tra
+
+- **useEffect:** Lắng nghe sự kiện `beforeunload` để cảnh báo khi người dùng đóng tab/trình duyệt.
+- **useEffect:** Intercept click vào các link nội bộ khi đang làm bài kiểm tra.
+- **Popup xác nhận:** Hiển thị popup xác nhận đơn giản (không yêu cầu mật khẩu) khi:
+  - Click vào link khác trong khi đang làm bài
+  - Click nút "Thoát bài kiểm tra"
+- **Config:** `requirePassword: false` để bỏ qua bước nhập mật khẩu cho riêng chức năng thoát bài kiểm tra.
+
 ## Các file liên quan
 
 - `client/src/components/quiz/Quiz.js`
+- `client/src/components/util/AlertManager.js`
+- `client/src/components/util/CustomAlert.js`
 - API: `/api/quiz`, `/api/languages`, `/api/topics/:language`
 - Backend: `server/index.js` (xử lý sinh câu hỏi cho các loại quiz, bao gồm loại mới "Từ chọn nghĩa")
 
@@ -69,6 +80,25 @@ Tính năng này cho phép người dùng luyện tập từ vựng thông qua c
 3. Nhấn "Bắt đầu" để làm bài.
 4. Trả lời từng câu hỏi, xem kết quả và đáp án sau khi hoàn thành.
 5. Có thể làm lại bài kiểm tra hoặc thay đổi cấu hình để luyện tập tiếp.
+
+## Tính năng bảo vệ và thoát bài kiểm tra
+
+### Bảo vệ thoát không mong muốn
+
+- **Cảnh báo đóng tab:** Khi người dùng đóng tab hoặc refresh trang trong khi đang làm bài, hiển thị cảnh báo.
+- **Intercept navigation:** Chặn click vào các link nội bộ khi đang làm bài kiểm tra.
+- **Popup xác nhận:** Hiển thị popup xác nhận trước khi cho phép thoát.
+
+### Thoát bài kiểm tra
+
+- **Nút "Thoát bài kiểm tra":** Hiển thị ở góc phải trên cùng trong khi làm bài.
+- **Popup xác nhận đơn giản:** Chỉ yêu cầu xác nhận, không cần nhập mật khẩu.
+- **Reset state:** Khi xác nhận thoát, reset toàn bộ state về ban đầu.
+
+### Khác biệt với các chức năng khác
+
+- **Thoát bài kiểm tra:** Chỉ cần popup xác nhận đơn giản (`requirePassword: false`)
+- **Xóa từ vựng/chủ đề/ngôn ngữ:** Vẫn yêu cầu nhập mật khẩu (`requirePassword: true`)
 
 ## Ví dụ minh họa: Loại "Từ chọn nghĩa" (word-to-meaning)
 

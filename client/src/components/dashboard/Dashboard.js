@@ -93,6 +93,7 @@ function Dashboard() {
       type: 'warning',
       confirmText: 'Xóa',
       cancelText: 'Hủy',
+      requirePassword: true,
       onConfirm: async () => {
         try {
           const response = await axios.delete(`/api/vocabulary/topic/${encodeURIComponent(topic)}?language=${language}`);
@@ -115,6 +116,7 @@ function Dashboard() {
       type: 'warning',
       confirmText: 'Xóa',
       cancelText: 'Hủy',
+      requirePassword: true,
       onConfirm: async () => {
         try {
           const response = await axios.delete(`/api/vocabulary/language/${language}`);

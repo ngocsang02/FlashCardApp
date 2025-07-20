@@ -1,5 +1,31 @@
 {
+  "name": "flashcard-server",
+  "version": "1.0.0",
+  "description": "Flashcard app backend server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node start.js",
+    "local": "copy env.local .env && npm start",
+    "atlas": "copy env.atlas .env && npm start",
+    "switch-local": "copy env.local .env",
+    "switch-atlas": "copy env.atlas .env"
+  },
   "dependencies": {
-    "streamifier": "^0.1.1"
-  }
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "mongoose": "^7.5.0",
+    "multer": "^1.4.5-lts.1",
+    "csv-parser": "^3.0.0",
+    "cloudinary": "^1.40.0",
+    "streamifier": "^0.1.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["flashcard", "vocabulary", "learning"],
+  "author": "",
+  "license": "ISC"
 } 

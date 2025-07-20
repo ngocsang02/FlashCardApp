@@ -76,10 +76,17 @@ const CustomAlert = ({
 
   const handleConfirm = () => {
     if (step === 'confirm') {
-      setStep('password');
-      setError('');
-      setPassword('');
-      return;
+      if (requirePassword) {
+        setStep('password');
+        setError('');
+        setPassword('');
+        return;
+      } else {
+        // Nếu không yêu cầu mật khẩu, thực hiện ngay
+        if (onConfirm) onConfirm();
+        onClose();
+        return;
+      }
     }
     if (step === 'password') {
       if (password !== '357689') {

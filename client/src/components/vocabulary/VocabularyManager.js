@@ -149,6 +149,7 @@ function VocabularyManager() {
       type: 'warning',
       confirmText: 'Xóa',
       cancelText: 'Hủy',
+      requirePassword: true,
       onConfirm: async () => {
         try {
           await axios.delete(`/api/vocabulary/${id}`);
