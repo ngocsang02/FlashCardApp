@@ -12,6 +12,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import EditLanguage from './components/edit/EditLanguage';
 import EditTopic from './components/edit/EditTopic';
 import StatisticsPage from './components/statistics/StatisticsPage';
+import AboutPage from './components/about/AboutPage';
 import ToastContainer from './components/util/ToastContainer';
 import AlertManager from './components/util/AlertManager';
 import SimpleAlertManager from './components/util/SimpleAlertManager';
@@ -64,6 +65,10 @@ function App() {
     '/quiz': {
       text: 'bg-gradient-to-r from-blue-500 to-green-400',
       border: 'linear-gradient(to right, #3b82f6, #22c55e) 1'
+    },
+    '/about': {
+      text: 'bg-gradient-to-r from-indigo-500 to-purple-500',
+      border: 'linear-gradient(to right, #6366f1, #8b5cf6) 1'
     }
   };
 
@@ -126,6 +131,15 @@ function App() {
                   Thống kê
                 </span>
               </a>
+              <a
+                href="/about"
+                className={`flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive('/about') ? 'border-b-4' : ''}`}
+                style={isActive('/about') ? { borderImage: navGradients['/about'].border, borderBottom: '4px solid' } : {}}
+              >
+                <span className={isActive('/about') ? `${navGradients['/about'].text} bg-clip-text text-transparent font-bold` : ''}>
+                  About
+                </span>
+              </a>
             </div>
           </div>
         </div>
@@ -140,6 +154,7 @@ function App() {
           <Route path="/vocabulary/manage" element={<VocabularyManager />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/edit-language/:language" element={<EditLanguage />} />
           <Route path="/edit-topic/:language/:topic" element={<EditTopic />} />
           <Route path="/edit-vocabulary/:id" element={<EditVocabulary />} />
