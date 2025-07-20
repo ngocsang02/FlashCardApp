@@ -155,9 +155,26 @@
 
 ---
 
+## 7. Tài liệu kỹ thuật
+
+### 7.1. Tài liệu hiện có
+
+- `doc/02_quiz.md`: Hướng dẫn chi tiết về tính năng Quiz và bảo vệ thoát bài kiểm tra
+- `doc/03_confirmation_system.md`: Chi tiết về hệ thống xác nhận và mật khẩu
+- `README.md`: Hướng dẫn sử dụng và cài đặt
+
+### 7.2. Hệ thống bảo mật
+
+- **Popup xác nhận**: Sử dụng `AlertManager.js` và `CustomAlert.js`
+- **Mật khẩu hệ thống**: `357689` cho các thao tác quan trọng
+- **Phân loại thao tác**:
+  - 🔴 Yêu cầu mật khẩu: Xóa từ vựng, chủ đề, ngôn ngữ
+  - 🟢 Không yêu cầu mật khẩu: Thoát bài kiểm tra, chỉnh sửa
+
 ## Kết luận
 
 - Project **flashcard** là ứng dụng học từ vựng dạng flashcard, có đủ chức năng quản lý, làm quiz, thống kê.
 - **Dùng MongoDB** làm database chính (xác nhận qua code và README)
 - Cấu trúc rõ ràng, chia component theo chức năng, API backend đơn giản, dễ mở rộng.
+- **Hệ thống bảo mật** được thiết kế thông minh với popup xác nhận và mật khẩu cho các thao tác quan trọng.
 - Dễ dàng phát triển thêm các tính năng nâng cao như đăng nhập, lưu lịch sử, học offline...

@@ -4,6 +4,8 @@ import { BookOpen, Plus, Play, Home, BarChart3, Grid, Menu } from 'lucide-react'
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import VocabularyManager from './components/vocabulary/VocabularyManager';
+import VocabularySelection from './components/vocabulary/VocabularySelection';
+import VocabularyLearning from './components/vocabulary/VocabularyLearning';
 import Quiz from './components/quiz/Quiz';
 import HomePage from './components/home/HomePage';
 import Dashboard from './components/dashboard/Dashboard';
@@ -34,7 +36,12 @@ function NavIcon({ active, children, idGradient }) {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/vocabulary') {
+      return location.pathname === '/vocabulary' || location.pathname.startsWith('/vocabulary/') || location.pathname === '/quiz';
+    }
+    return location.pathname === path;
+  };
 
   // Định nghĩa mapping route -> gradient cho text và border, giống tiêu đề từng màn hình
   const navGradients = {
@@ -93,6 +100,15 @@ function App() {
                 </span>
               </a>
               <a
+                href="/vocabulary"
+                className={`flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive('/vocabulary') ? 'border-b-4' : ''}`}
+                style={isActive('/vocabulary') ? { borderImage: navGradients['/vocabulary'].border, borderBottom: '4px solid' } : {}}
+              >
+                <span className={isActive('/vocabulary') ? `${navGradients['/vocabulary'].text} bg-clip-text text-transparent font-bold` : ''}>
+                  Từ vựng
+                </span>
+              </a>
+              <a
                 href="/dashboard"
                 className={`flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive('/dashboard') ? 'border-b-4' : ''}`}
                 style={isActive('/dashboard') ? { borderImage: navGradients['/dashboard'].border, borderBottom: '4px solid' } : {}}
@@ -110,24 +126,6 @@ function App() {
                   Thống kê
                 </span>
               </a>
-              <a
-                href="/vocabulary"
-                className={`flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive('/vocabulary') ? 'border-b-4' : ''}`}
-                style={isActive('/vocabulary') ? { borderImage: navGradients['/vocabulary'].border, borderBottom: '4px solid' } : {}}
-              >
-                <span className={isActive('/vocabulary') ? `${navGradients['/vocabulary'].text} bg-clip-text text-transparent font-bold` : ''}>
-                  Quản lý từ vựng
-                </span>
-              </a>
-              <a
-                href="/quiz"
-                className={`flex items-center px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive('/quiz') ? 'border-b-4' : ''}`}
-                style={isActive('/quiz') ? { borderImage: navGradients['/quiz'].border, borderBottom: '4px solid' } : {}}
-              >
-                <span className={isActive('/quiz') ? `${navGradients['/quiz'].text} bg-clip-text text-transparent font-bold` : ''}>
-                  Bài kiểm tra
-                </span>
-              </a>
             </div>
           </div>
         </div>
@@ -137,7 +135,9 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/vocabulary" element={<VocabularyManager />} />
+          <Route path="/vocabulary" element={<VocabularySelection />} />
+          <Route path="/vocabulary/learn" element={<VocabularyLearning />} />
+          <Route path="/vocabulary/manage" element={<VocabularyManager />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/statistics" element={<StatisticsPage />} />
           <Route path="/edit-language/:language" element={<EditLanguage />} />

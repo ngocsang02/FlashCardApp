@@ -86,7 +86,7 @@ function EditLanguage() {
             try {
               await axios.delete(`/api/vocabulary/language/${language}`);
               window.showToast(`Đã xóa ${vocabularies.length} từ vựng trong ngôn ngữ "${language}"`, 'success');
-              navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary');
+              navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary/manage');
             } catch (err) {
               window.showToast('Lỗi khi xóa', 'error');
             } finally {

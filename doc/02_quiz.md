@@ -73,6 +73,10 @@ Tính năng này cho phép người dùng luyện tập từ vựng thông qua c
 - API: `/api/quiz`, `/api/languages`, `/api/topics/:language`
 - Backend: `server/index.js` (xử lý sinh câu hỏi cho các loại quiz, bao gồm loại mới "Từ chọn nghĩa")
 
+## Tài liệu liên quan
+
+- `03_confirmation_system.md`: Chi tiết về hệ thống xác nhận và mật khẩu
+
 ## Hướng dẫn sử dụng
 
 1. Vào trang "Bài kiểm tra" từ trang chủ.

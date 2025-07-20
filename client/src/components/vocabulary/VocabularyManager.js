@@ -387,14 +387,18 @@ function VocabularyManager() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="mb-10 flex flex-col items-center justify-center select-none">
+      {/* Header với nút quay lại */}
+      <div className="mb-2">
         <button
-          onClick={() => navigate('/')}
-          className="flex items-center text-gray-500 hover:text-primary-600 transition-colors text-sm mb-2 self-start"
+          onClick={() => navigate('/vocabulary')}
+          className="flex items-center text-gray-500 hover:text-primary-600 transition-colors text-base"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Về trang chủ
+          Quay lại
         </button>
+      </div>
+
+      <div className="mb-10 flex flex-col items-center justify-center select-none">
         <span className="mb-2">
           <BookOpen className="h-14 w-14 drop-shadow-lg text-transparent bg-gradient-to-tr from-blue-400 via-green-400 to-yellow-400 bg-clip-text" />
         </span>

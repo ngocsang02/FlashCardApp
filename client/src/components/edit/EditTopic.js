@@ -86,7 +86,7 @@ function EditTopic() {
             try {
               await axios.delete(`/api/vocabulary/topic/${encodeURIComponent(decodeURIComponent(topic))}?language=${language}`);
               window.showToast(`Đã xóa chủ đề "${decodeURIComponent(topic)}"!`, 'success');
-              navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary');
+              navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary/manage');
             } catch (err) {
               window.showToast('Lỗi khi xóa', 'error');
             } finally {

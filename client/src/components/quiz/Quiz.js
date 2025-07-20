@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Play, RotateCcw, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, XCircle, ArrowLeft, LogOut } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 function Quiz() {
@@ -315,16 +315,19 @@ function Quiz() {
   if (questions.length === 0) {
     return (
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          <div className="mb-10 flex flex-col items-center justify-center select-none">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center text-gray-500 hover:text-primary-600 transition-colors text-sm mb-2 self-start"
+        {/* Header với nút quay lại */}
+        <div className="mb-2">
+                      <button
+              onClick={() => navigate('/vocabulary')}
+              className="flex items-center text-gray-500 hover:text-primary-600 transition-colors text-base"
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Về trang chủ
-            </button>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Quay lại
+          </button>
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-10 flex flex-col items-center justify-center select-none">
             <span className="mb-2">
               <Play className="h-14 w-14 drop-shadow-lg text-transparent bg-gradient-to-tr from-green-400 via-blue-400 to-purple-500 bg-clip-text" />
             </span>
@@ -503,35 +506,14 @@ function Quiz() {
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Progress Bar */}
-        <div className="mb-6">
+        <div className="mb-6 max-w-2xl mx-auto">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-700">
               Câu hỏi {currentQuestion + 1}/{questions.length}
             </span>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700">
-                Điểm: {score}/{questions.length}
-              </span>
-              <button
-                onClick={() => {
-                  window.showAlert({
-                    title: 'Xác nhận thoát bài kiểm tra',
-                    message: 'Bạn có chắc chắn muốn thoát khỏi bài kiểm tra? Tiến độ hiện tại sẽ bị mất.',
-                    type: 'warning',
-                    confirmText: 'Thoát',
-                    cancelText: 'Tiếp tục',
-                    showCancel: true,
-                    requirePassword: false,
-                    onConfirm: () => {
-                      resetQuiz();
-                    }
-                  });
-                }}
-                className="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
-              >
-                Thoát bài kiểm tra
-              </button>
-            </div>
+            <span className="text-sm font-medium text-gray-700">
+              Điểm: {score}/{questions.length}
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -542,55 +524,36 @@ function Quiz() {
         </div>
 
         {/* Question */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 max-w-2xl mx-auto relative">
+          <div className="text-center">
+            <h2 className="text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">
               {currentQ.type === 'word-to-meaning' ? 'Chọn nghĩa đúng cho từ này:' : currentQ.type === 'image-to-word' ? 'Chọn từ đúng cho hình ảnh này:' : 'Chọn hình ảnh đúng cho từ này:'}
             </h2>
             
             {/* Đáp án lựa chọn (4 ô) */}
-            <div className="mb-8">
+            <div className="mb-4 sm:mb-6">
               {currentQ.type === 'word-to-image' && (
                 <>
-                  <div className="text-4xl font-bold text-primary-600 mb-6 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-4 sm:mb-6 text-center">
                     {currentQ.question}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 place-items-center">
                     {currentQ.answers.map((answer) => (
                       <button
                         key={answer.id}
                         onClick={() => handleAnswerSelect(answer.id)}
                         disabled={answered}
-                        className={`${getAnswerClass(answer.id)} p-4 border-2 border-gray-200 rounded-lg text-left transition-all duration-200`}
+                        className={`${getAnswerClass(answer.id)} w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 border-2 border-gray-200 rounded-lg transition-all duration-200 bg-white overflow-hidden relative hover:shadow-md flex items-center justify-center`}
                       >
-                        <div className="flex justify-center">
-                          <div className="max-w-full max-h-32 rounded overflow-hidden">
-                            <img
-                              src={answer.imageUrl}
-                              alt="Answer"
-                              className="w-full h-full object-contain"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
-                              }}
-                            />
-                            <div 
-                              className="w-full h-full flex items-center justify-center text-xs text-gray-500 bg-gray-100 hidden"
-                              style={{ minHeight: '80px' }}
-                            >
-                              Not found
-                            </div>
-                          </div>
-                        </div>
-                        {answered && (
-                          <div className="flex justify-center mt-2">
-                            {answer.isCorrect ? (
-                              <CheckCircle className="h-6 w-6 text-green-600" />
-                            ) : selectedAnswer === answer.id ? (
-                              <XCircle className="h-6 w-6 text-red-600" />
-                            ) : null}
-                          </div>
-                        )}
+                        <img
+                          src={answer.imageUrl}
+                          alt="Answer"
+                          className="w-full h-full object-contain"
+                          style={{ objectPosition: 'center' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
                       </button>
                     ))}
                   </div>
@@ -598,40 +561,42 @@ function Quiz() {
               )}
               {currentQ.type === 'image-to-word' && (
                 <>
-                  <div className="flex justify-center mb-6">
-                    <div className="max-w-md max-h-64 rounded-lg border overflow-hidden">
-                      <img
-                        src={currentQ.question}
-                        alt="Question"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                      <div 
-                        className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 hidden"
-                        style={{ minHeight: '200px' }}
-                      >
-                        Not found
+                  <div className="flex justify-center mb-4">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-lg border bg-white relative overflow-hidden">
+                      <div className="w-full h-full flex items-center justify-center p-2">
+                        <img
+                          src={currentQ.question}
+                          alt="Question"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div 
+                          className="absolute inset-0 w-full h-full flex items-center justify-center text-gray-500 bg-gray-100"
+                          style={{ display: 'none' }}
+                        >
+                          Không tìm thấy
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 place-items-center">
                     {currentQ.answers.map((answer) => (
                       <button
                         key={answer.id}
                         onClick={() => handleAnswerSelect(answer.id)}
                         disabled={answered}
-                        className={`${getAnswerClass(answer.id)} p-4 border-2 border-gray-200 rounded-lg text-left transition-all duration-200`}
+                        className={`${getAnswerClass(answer.id)} w-28 h-14 sm:w-36 sm:h-18 md:w-44 md:h-22 border-2 border-gray-200 rounded-xl transition-all duration-200 flex flex-col items-center justify-center relative hover:shadow-md`}
                       >
                         <div className="text-lg font-semibold text-center">{answer.text}</div>
                         {answered && (
-                          <div className="flex justify-center mt-2">
+                          <div className="absolute top-2 right-2">
                             {answer.isCorrect ? (
-                              <CheckCircle className="h-6 w-6 text-green-600" />
+                              <CheckCircle className="h-5 w-5 text-green-600 bg-white rounded-full shadow-sm" />
                             ) : selectedAnswer === answer.id ? (
-                              <XCircle className="h-6 w-6 text-red-600" />
+                              <XCircle className="h-5 w-5 text-red-600 bg-white rounded-full shadow-sm" />
                             ) : null}
                           </div>
                         )}
@@ -642,24 +607,24 @@ function Quiz() {
               )}
               {currentQ.type === 'word-to-meaning' && (
                 <>
-                  <div className="text-4xl font-bold text-primary-600 mb-6 text-center">
+                  <div className="text-4xl font-bold text-primary-600 mb-4 text-center">
                     {currentQ.question}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 place-items-center">
                     {currentQ.answers.map((answer) => (
                       <button
                         key={answer.id}
                         onClick={() => handleAnswerSelect(answer.id)}
                         disabled={answered}
-                        className={`${getAnswerClass(answer.id)} p-4 border-2 border-gray-200 rounded-lg text-left transition-all duration-200`}
+                        className={`${getAnswerClass(answer.id)} w-28 h-14 sm:w-36 sm:h-18 md:w-44 md:h-22 border-2 border-gray-200 rounded-xl transition-all duration-200 flex flex-col items-center justify-center relative hover:shadow-md`}
                       >
                         <div className="text-lg font-semibold text-center">{answer.text}</div>
                         {answered && (
-                          <div className="flex justify-center mt-2">
+                          <div className="absolute top-2 right-2">
                             {answer.isCorrect ? (
-                              <CheckCircle className="h-6 w-6 text-green-600" />
+                              <CheckCircle className="h-5 w-5 text-green-600 bg-white rounded-full shadow-sm" />
                             ) : selectedAnswer === answer.id ? (
-                              <XCircle className="h-6 w-6 text-red-600" />
+                              <XCircle className="h-5 w-5 text-red-600 bg-white rounded-full shadow-sm" />
                             ) : null}
                           </div>
                         )}
@@ -670,21 +635,23 @@ function Quiz() {
               )}
               {currentQ.type === 'image-fill-word' && (
                 <div className="flex flex-col items-center">
-                  <div className="max-w-md max-h-64 rounded-lg border overflow-hidden mb-6">
-                    <img
-                      src={currentQ.question}
-                      alt="Question"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div 
-                      className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 hidden"
-                      style={{ minHeight: '200px' }}
-                    >
-                      Not found
+                  <div className="w-48 h-48 md:w-64 md:h-64 rounded-lg border mb-4 bg-white relative overflow-hidden">
+                    <div className="w-full h-full flex items-center justify-center p-2">
+                      <img
+                        src={currentQ.question}
+                        alt="Question"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                      <div 
+                        className="absolute inset-0 w-full h-full flex items-center justify-center text-gray-500 bg-gray-100"
+                        style={{ display: 'none' }}
+                      >
+                        Không tìm thấy
+                      </div>
                     </div>
                   </div>
                   <input
@@ -724,64 +691,98 @@ function Quiz() {
               <div className="flex justify-center">
                 <button
                   onClick={nextQuestion}
-                  className="px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm sm:text-base font-medium"
                 >
                   {currentQuestion < questions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}
                 </button>
               </div>
             )}
           </div>
+          
+          {/* Exit Button - positioned in top-left corner of card */}
+          <div className="absolute top-4 left-4">
+            <button
+              onClick={() => {
+                window.showAlert({
+                  title: 'Xác nhận thoát bài kiểm tra',
+                  message: 'Bạn có chắc chắn muốn thoát khỏi bài kiểm tra? Tiến độ hiện tại sẽ bị mất.',
+                  type: 'warning',
+                  confirmText: 'Thoát',
+                  cancelText: 'Tiếp tục',
+                  showCancel: true,
+                  requirePassword: false,
+                  onConfirm: () => {
+                    resetQuiz();
+                  }
+                });
+              }}
+              className="text-red-600 hover:text-red-800 transition-colors p-2 rounded-full hover:bg-red-50"
+              title="Thoát bài kiểm tra"
+            >
+              <LogOut className="h-5 w-5 transform rotate-180" />
+            </button>
+          </div>
         </div>
 
-        {/* Card giải thích đáp án đúng, tách biệt hoàn toàn */}
+        {/* Card giải thích đáp án đúng */}
         {showCorrectAnswer && correctVocabulary && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-green-500 mt-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-              Đáp án đúng
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center mb-3">
-                  <h4 className="font-semibold text-gray-800 mr-3">Từ vựng:</h4>
-                  <div className="text-2xl font-bold text-primary-600">
-                    {correctVocabulary.word || 'Không có từ vựng'}
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 border-l-4 border-green-500 max-w-2xl mx-auto">
+            <div className="flex items-center mb-3 sm:mb-4">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2" />
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Đáp án đúng</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {/* Phần thông tin từ vựng */}
+              <div className="flex flex-col justify-between h-full space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4">
+                  <div>
+                    <span className="text-gray-500 text-sm">Từ vựng: </span>
+                    <span className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 ml-2">
+                      {correctVocabulary.word || 'Không có từ vựng'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-sm">Nghĩa: </span>
+                    <span className="text-gray-500 ml-2 text-sm">
+                      {correctVocabulary.meaning || 'Đang tải...'}
+                    </span>
                   </div>
                 </div>
-                <div className="text-gray-600 mb-2">
-                  <strong>Nghĩa:</strong> {correctVocabulary.meaning || 'Đang tải...'}
-                </div>
                 {correctVocabulary.topic && (
-                  <div className="text-sm text-gray-500">
-                    <strong>Chủ đề:</strong> {correctVocabulary.topic}
+                  <div>
+                    <span className="text-gray-500 text-sm">Chủ đề: </span>
+                    <span className="text-gray-500 ml-2 text-sm">
+                      {correctVocabulary.topic}
+                    </span>
                   </div>
                 )}
               </div>
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-3">Hình ảnh:</h4>
-                <div className="flex justify-center">
-                  <div className="max-w-lg max-h-64 rounded-lg border overflow-hidden">
-                    <img
-                      src={correctVocabulary.imageUrl}
-                      alt={correctVocabulary.word}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div 
-                      className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 hidden"
-                      style={{ minHeight: '200px' }}
-                    >
-                      Not found
-                    </div>
+              
+              {/* Phần hình ảnh */}
+              <div className="flex justify-center items-start">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border border-gray-200 rounded-lg bg-white overflow-hidden">
+                  <img
+                    src={correctVocabulary.imageUrl}
+                    alt={correctVocabulary.word}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div 
+                    className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 text-xs"
+                    style={{ display: 'none' }}
+                  >
+                    Không tìm thấy
                   </div>
                 </div>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

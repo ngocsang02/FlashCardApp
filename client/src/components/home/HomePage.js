@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Plus, Play, TrendingUp } from 'lucide-react';
+import { BookOpen, Plus, Play, TrendingUp, Grid } from 'lucide-react';
 
 function HomePage() {
   return (
@@ -18,19 +18,19 @@ function HomePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
         <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-lg mb-4 mx-auto">
-            <Plus className="h-6 w-6 text-primary-600" />
+          <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4 mx-auto">
+            <BookOpen className="h-6 w-6 text-blue-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
-            Quản lý từ vựng
+            Từ vựng
           </h3>
           <p className="text-gray-600 mb-4">
-            Thêm từ vựng mới thủ công hoặc import từ file CSV theo chủ đề và ngôn ngữ.
+            Học từ vựng mới hoặc làm bài kiểm tra để củng cố kiến thức đã học.
           </p>
           <div className="flex justify-center">
             <Link
               to="/vocabulary"
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Bắt đầu
             </Link>
@@ -38,21 +38,21 @@ function HomePage() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4 mx-auto">
-            <Play className="h-6 w-6 text-green-600" />
+          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-lg mb-4 mx-auto">
+            <Grid className="h-6 w-6 text-primary-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
-            Bài kiểm tra
+            Dashboard
           </h3>
           <p className="text-gray-600 mb-4">
-            Luyện tập với các bài kiểm tra đa dạng: nhìn hình chọn từ hoặc nhìn từ chọn hình.
+            Xem tổng quan và quản lý nhanh các từ vựng, chủ đề và ngôn ngữ.
           </p>
           <div className="flex justify-center">
             <Link
-              to="/quiz"
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              to="/dashboard"
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
             >
-              Làm bài kiểm tra
+              Xem Dashboard
             </Link>
           </div>
         </div>
@@ -88,9 +88,9 @@ function HomePage() {
               <span className="text-primary-600 font-semibold">1</span>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Thêm từ vựng</h3>
+              <h3 className="font-semibold text-gray-900">Học từ vựng</h3>
               <p className="text-gray-600">
-                Vào trang "Quản lý từ vựng" để thêm từ mới hoặc import từ file CSV.
+                Vào trang "Từ vựng" để học từ mới hoặc làm bài kiểm tra.
               </p>
             </div>
           </div>
@@ -99,9 +99,9 @@ function HomePage() {
               <span className="text-primary-600 font-semibold">2</span>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Làm bài kiểm tra</h3>
+              <h3 className="font-semibold text-gray-900">Xem Dashboard</h3>
               <p className="text-gray-600">
-                Vào trang "Bài kiểm tra" để luyện tập với các từ đã thêm.
+                Vào trang "Dashboard" để xem tổng quan và quản lý nhanh từ vựng.
               </p>
             </div>
           </div>

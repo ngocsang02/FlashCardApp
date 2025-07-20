@@ -76,7 +76,7 @@ function EditVocabulary() {
         try {
           await axios.delete(`/api/vocabulary/${id}`);
           window.showToast('Đã xóa từ vựng!', 'success');
-          navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary');
+          navigate(from === 'dashboard' ? '/dashboard' : '/vocabulary/manage');
         } catch (err) {
           window.showToast('Lỗi khi xóa', 'error');
         } finally {
@@ -95,9 +95,9 @@ function EditVocabulary() {
         navigate('/dashboard', { state: { scrollY } });
       }
     } else if (location.state && location.state._restoreUI) {
-      navigate('/vocabulary', { state: { ...location.state, _restoreUI: true } });
+      navigate('/vocabulary/manage', { state: { ...location.state, _restoreUI: true } });
     } else {
-      navigate('/vocabulary');
+      navigate('/vocabulary/manage');
     }
   };
 

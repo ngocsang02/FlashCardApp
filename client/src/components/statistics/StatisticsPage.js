@@ -63,7 +63,7 @@ function StatisticsPage() {
         <h1 className="text-3xl font-bold mb-2 text-gray-700">Chưa có dữ liệu thống kê</h1>
         <p className="text-gray-500 mb-6">Hãy tạo chủ đề cho ít nhất một ngôn ngữ để xem thống kê học tập!</p>
         <button
-          onClick={() => navigate('/vocabulary')}
+                        onClick={() => navigate('/vocabulary/manage')}
           className="px-6 py-2 rounded-lg bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400 text-white font-semibold shadow hover:brightness-110 transition-all"
         >
           Thêm chủ đề
